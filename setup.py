@@ -24,6 +24,10 @@ def read_readme():
     with open(os.path.join(here, 'README.md')) as f:
         return f.read()
 
+def get_requirements():
+    with open(os.path.join(here, 'requirements.txt')) as f:
+        return f.readlines()
+
 setup(
     name = "pypi-resource",
     version = '0.1.0',
@@ -37,9 +41,6 @@ setup(
     keywords = [
     ],
     packages = [ 'pypi_resource' ],
-    install_requires = [
-        'requests',
-        'twine',
-    ],
+    install_requires = get_requirements(),
     include_package_data = True,
 )
