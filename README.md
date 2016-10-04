@@ -38,3 +38,12 @@ plan:
   params:
     glob: my_package-*.tar.gz
 ```
+
+## Development
+To run the unit tests, first install the package with the editable flag:
+
+``` sh
+cd $PYPI_RESOURCE_DIR
+pip install -e .
+python test/unittests.py
+```
