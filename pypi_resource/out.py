@@ -14,7 +14,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import common
+
+from distutils.version import LooseVersion
+import glob
+import json
+import subprocess
 import sys
+
+import pkginfo
+
+def get_package_version(pkgpath):
+    metadata = pkginfo.get_metadata(pkgpath)
+    return LooseVersion(metadata.version)
+
+def find_package(pattern):
+    files = glob.glob(pattern)
+    files = sorted(files, key=get_package_version)
+    return files[-1]
+
+def upload_package(pkgpath, input):
+    subprocess.run([
+        'twine', 'upload',
+        '--repository-url', get_pypi_url(input),
+        '-u', input['source']['username'],
+        '-p', input['source']['password'],
+        pkgpath
+    ], stdout=sys.stderr, check=True)
+
+def out(srcdir, instream):
+    input = json.load(instream)
+    common.merge_defaults(input)
+    pkgpath = find_package(input['params']['glob'])
+    upload_package(pkgpath)
+    print(get_package_version(pkgpath))
 
 def main():
     print('out', file=sys.stderr)

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import pypi
+from . import common, pypi
 import json
 import sys
 
@@ -27,12 +27,8 @@ def truncate_before(lst, value):
     return [lst[-1]]
 
 def check(instream):
-    input = {
-        'source': {
-            'test': False
-        }
-    }
-    input.update(json.load(instream))
+    input = json.load(instream)
+    common.merge_defaults(input)
     version = input['version']
     print('Starting version: {}'.format(version), file=sys.stderr)
     versions = pypi.get_versions_from_pypi(input)

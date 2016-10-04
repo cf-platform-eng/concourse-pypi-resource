@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import common
+
 import os
 import sys
 from urllib.parse import urlparse
@@ -38,12 +40,8 @@ def local_download_path(url, destdir):
     return os.path.join(destdir, basename)
 
 def in_(destdir, instream):
-    input = {
-        'source': {
-            'test': False
-        }
-    }
-    input.update(json.load(instream))
+    input = json.load(instream)
+    common.merge_defaults(input)
     version = input['version']
     url = pypi.get_pypi_version_url(input, version)
     dest = local_download_path(url, destdir)
