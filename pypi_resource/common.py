@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
+def msg(msg):
+    print(msg, file=sys.stderr)
+
 def merge_defaults(input):
     if not 'test' in input['source']:
         input['source']['test'] = False

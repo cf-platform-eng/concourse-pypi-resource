@@ -1,8 +1,5 @@
 FROM python:3-alpine
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY dist/concourse-pypi-resource-*.tar.gz .
+RUN pip install concourse-pypi-resource-*.tar.gz
 RUN mkdir -p /opt/resource
-COPY pypi_resource/check.py /opt/resource/check
-COPY pypi_resource/in_.py /opt/resource/in
-COPY pypi_resource/out.py /opt/resource/out
-RUN chmod +x /opt/resource/check /opt/resource/in /opt/resource/out
+RUN for script in check in out; do ln -s $(which $script) /opt/resource/; done

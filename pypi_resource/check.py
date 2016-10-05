@@ -30,12 +30,12 @@ def check(instream):
     input = json.load(instream)
     common.merge_defaults(input)
     version = input['version']
-    print('Starting version: {}'.format(version), file=sys.stderr)
+    common.msg('Starting version: {}'.format(version))
     versions = pypi.get_versions_from_pypi(input)
     return json.dumps(truncate_before(versions, version))
 
 def main():
-    print('check', file=sys.stderr)
+    common.msg('check')
     print(check(sys.stdin))
 
 if __name__ == '__main__':

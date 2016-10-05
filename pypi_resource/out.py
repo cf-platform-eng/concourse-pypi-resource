@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import common
+from . import common, pypi
 
 from distutils.version import LooseVersion
 import glob
 import json
+import os
 import subprocess
 import sys
 
@@ -28,29 +29,35 @@ def get_package_version(pkgpath):
     metadata = pkginfo.get_metadata(pkgpath)
     return LooseVersion(metadata.version)
 
-def find_package(pattern):
-    files = glob.glob(pattern)
+def find_package(pattern, srcdir):
+    files = glob.glob(os.path.join(srcdir, pattern))
+    common.msg('Glob {} matched files: {}'.format(pattern, files))
     files = sorted(files, key=get_package_version)
     return files[-1]
 
 def upload_package(pkgpath, input):
     subprocess.run([
         'twine', 'upload',
-        '--repository-url', get_pypi_url(input),
+        '--repository', pypi.get_pypi_repository(input),
+        '--repository-url', pypi.get_pypi_url(input),
         '-u', input['source']['username'],
         '-p', input['source']['password'],
         pkgpath
-    ], stdout=sys.stderr, check=True)
+    ], stdout=sys.stderr.fileno(), check=True)
 
 def out(srcdir, instream):
+    common.msg('Loading json input')
     input = json.load(instream)
     common.merge_defaults(input)
-    pkgpath = find_package(input['params']['glob'])
-    upload_package(pkgpath)
-    print(get_package_version(pkgpath))
+    common.msg('Finding package to upload')
+    pkgpath = find_package(input['params']['glob'], srcdir)
+    version = get_package_version(pkgpath)
+    common.msg('Uploading {} version {}'.format(pkgpath, version))
+    upload_package(pkgpath, input)
+    print(json.dumps({'version': {'version': str(version)}}))
 
 def main():
-    print('out', file=sys.stderr)
+    out(sys.argv[1], sys.stdin)
     sys.exit(0)
 
 if __name__ == '__main__':

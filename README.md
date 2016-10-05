@@ -40,10 +40,8 @@ plan:
 ```
 
 ## Development
-To run the unit tests, first install the package with the editable flag:
+To run the unit tests, go to the root of the repository and run:
 
 ``` sh
-cd $PYPI_RESOURCE_DIR
-pip install -e .
-python test/unittests.py
+PYTHONPATH=.:$PYTHONPATH python test/unittests.py
 ```

@@ -14,7 +14,7 @@
 
 import unittest
 from unittest.mock import patch
-from pypi_resource import pypi, check, in_
+from pypi_resource import pypi, check, in_, out
 import io
 import json
 import os
@@ -52,6 +52,12 @@ class TestPypi(unittest.TestCase):
         self.assertEqual(pypi.get_pypi_url(input), 'https://testpypi.python.org/pypi')
         input = {'source': { 'test': False } }
         self.assertEqual(pypi.get_pypi_url(input), 'https://pypi.python.org/pypi')
+
+    def test_pypi_url(self):
+        input = {'source': { 'test': True } }
+        self.assertEqual(pypi.get_pypi_repository(input), 'pypitest')
+        input = {'source': { 'test': False } }
+        self.assertEqual(pypi.get_pypi_repository(input), 'pypi')
 
     @patch('pypi_resource.pypi.get_pypi_package_info')
     def test_get_versions_from_pypi(self, mock_info):

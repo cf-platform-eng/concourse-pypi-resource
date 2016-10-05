@@ -29,7 +29,7 @@ def get_requirements():
         return f.readlines()
 
 setup(
-    name = "pypi-resource",
+    name = "concourse-pypi-resource",
     version = '0.1.0',
     description = 'Concourse CI resource for PyPI packages.',
     long_description = read_readme(),
@@ -43,4 +43,11 @@ setup(
     packages = [ 'pypi_resource' ],
     install_requires = get_requirements(),
     include_package_data = True,
+    entry_points = {
+        'console_scripts': [
+            'check = pypi_resource.check:main',
+            'in = pypi_resource.in_:main',
+            'out = pypi_resource.out:main',
+        ]
+    }
 )
