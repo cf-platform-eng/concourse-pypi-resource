@@ -44,9 +44,12 @@ def in_(destdir, instream):
     input = json.load(instream)
     common.merge_defaults(input)
     version = input['version']['version']
-    url = pypi.get_pypi_version_url(input, version)
-    dest = local_download_path(url, destdir)
-    download(url, dest)
+    if common.is_release(version):
+        url = pypi.get_pypi_version_url(input, version)
+        dest = local_download_path(url, destdir)
+        download(url, dest)
+    else:
+        common.msg('Version {} is not a release; skipping download'.format(version))
     return version
 
 def main():

@@ -14,7 +14,7 @@
 
 import unittest
 from unittest.mock import patch
-from pypi_resource import pypi, check, in_, out
+from pypi_resource import pypi, check, in_, out, common
 from distutils.version import LooseVersion
 import io
 import json
@@ -85,18 +85,18 @@ class TestCheck(unittest.TestCase):
     @patch('pypi_resource.pypi.get_pypi_package_info')
     def test_newest_version(self, mock_info):
         mock_info.return_value = canned_pypi_info
-        version = '0.9.2'
+        version = {'version': {'version': '0.9.2'}}
         instream = make_input_stream(version)
         result = check.check(instream)
-        self.assertEqual(json.loads(result), [version])
+        self.assertEqual(json.loads(result), [version['version']])
 
     @patch('pypi_resource.pypi.get_pypi_package_info')
     def test_has_newer_version(self, mock_info):
         mock_info.return_value = canned_pypi_info
-        version = '0.9.1'
+        version = {'version': {'version': '0.9.1'}}
         instream = make_input_stream(version)
         result = check.check(instream)
-        self.assertEqual(json.loads(result), ['0.9.1', '0.9.2'])
+        self.assertEqual(json.loads(result), [{'version': '0.9.1'}, {'version': '0.9.2'}])
 
 class TestIn(unittest.TestCase):
     def test_parse_filename_from_url(self):
@@ -111,11 +111,11 @@ class TestIn(unittest.TestCase):
         expected = os.path.join(destdir, filename)
         self.assertEqual(in_.local_download_path(url, destdir), expected)
 
-class TestOut(unittest.TestCase):
+class TestCommon(unittest.TestCase):
     def test_is_release(self):
-        self.assertTrue(out.is_release(LooseVersion('0.9.1')))
-        self.assertFalse(out.is_release(LooseVersion('1.1.2.dev21')))
-        self.assertFalse(out.is_release(LooseVersion('1.1.2-dev.21')))
+        self.assertTrue(common.is_release(LooseVersion('0.9.1')))
+        self.assertFalse(common.is_release(LooseVersion('1.1.2.dev21')))
+        self.assertFalse(common.is_release(LooseVersion('1.1.2-dev.21')))
 
 if __name__ == '__main__':
 	unittest.main()

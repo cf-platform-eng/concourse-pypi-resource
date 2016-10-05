@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import sys
 
 def msg(msg):
@@ -20,3 +21,6 @@ def msg(msg):
 def merge_defaults(input):
     if not 'test' in input['source']:
         input['source']['test'] = False
+
+def is_release(version):
+    return re.match('^\d+(\.\d+)*$', str(version))

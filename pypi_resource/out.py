@@ -20,7 +20,6 @@ from distutils.version import LooseVersion
 import glob
 import json
 import os
-import re
 import subprocess
 import sys
 
@@ -46,9 +45,6 @@ def upload_package(pkgpath, input):
         pkgpath
     ], stdout=sys.stderr.fileno(), check=True)
 
-def is_release(version):
-    return re.match('^\d+(\.\d+)*$', str(version))
-
 def out(srcdir, instream):
     common.msg('Loading json input')
     input = json.load(instream)
@@ -56,7 +52,7 @@ def out(srcdir, instream):
     common.msg('Finding package to upload')
     pkgpath = find_package(input['params']['glob'], srcdir)
     version = get_package_version(pkgpath)
-    if is_release(version):
+    if common.is_release(version):
         common.msg('Uploading {} version {}'.format(pkgpath, version))
         upload_package(pkgpath, input)
     else:
