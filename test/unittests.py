@@ -15,6 +15,7 @@
 import unittest
 from unittest.mock import patch
 from pypi_resource import pypi, check, in_, out
+from distutils.version import LooseVersion
 import io
 import json
 import os
@@ -109,6 +110,12 @@ class TestIn(unittest.TestCase):
         destdir = 'output'
         expected = os.path.join(destdir, filename)
         self.assertEqual(in_.local_download_path(url, destdir), expected)
+
+class TestOut(unittest.TestCase):
+    def test_is_release(self):
+        self.assertTrue(out.is_release(LooseVersion('0.9.1')))
+        self.assertFalse(out.is_release(LooseVersion('1.1.2.dev21')))
+        self.assertFalse(out.is_release(LooseVersion('1.1.2-dev.21')))
 
 if __name__ == '__main__':
 	unittest.main()
