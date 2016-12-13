@@ -29,11 +29,12 @@ def truncate_before(lst, value):
 def check(instream):
     input = json.load(instream)
     common.merge_defaults(input)
-    version = input['version']['version']
-    common.msg('Starting version: {}'.format(version))
     versions = pypi.get_versions_from_pypi(input)
     versions = [{'version': version} for version in versions]
-    return json.dumps(truncate_before(versions, version))
+    if input.get('version', None):
+        version = input['version']['version']
+        versions = truncate_before(versions, version)
+    return json.dumps(versions)
 
 def main():
     print(check(sys.stdin))
