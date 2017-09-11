@@ -1,6 +1,8 @@
 # PyPI Package Resource
 A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.python.org/pypi) packages.
 
+Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatformeng/concourse-pypi-resource/.
+
 ## Source Configuration
 * `name`: *Required* The name of the package.
 * `username`: *Required for `out`* The username for PyPI server authentication.
@@ -9,9 +11,15 @@ A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.py
 
 ### Example
 ``` yaml
+resource_types:
+- name: pypi
+  type: docker-image
+  source:
+    repository: cfplatformeng/concourse-pypi-resource
+
 resources:
 - name: my-pypi-package
-  type: pypi-package
+  type: pypi
   source:
     name: my_package
     username: user
@@ -34,7 +42,7 @@ plan:
 ### Example
 ``` yaml
 plan:
-- put: my-pacakge
+- put: my-pypi-package
   params:
     glob: my_package-*.tar.gz
 ```
