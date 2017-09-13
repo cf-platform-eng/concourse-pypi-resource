@@ -30,6 +30,10 @@ resources:
 ## `get`: Download the latest version
 No parameters.
 
+### Additional files populated
+
+ * `version`: the latest version
+
 ### Example
 ``` yaml
 plan:

@@ -48,6 +48,9 @@ def in_(destdir, instream):
         url = pypi.get_pypi_version_url(input, version)
         dest = local_download_path(url, destdir)
         download(url, dest)
+        version_dest = os.path.join(destdir, 'version')
+        with open(version_dest, 'w+') as file:
+            file.write(version)
     else:
         common.msg('Version {} is not a release; skipping download'.format(version))
     return version
