@@ -53,3 +53,9 @@ To run the unit tests, go to the root of the repository and run:
 ``` sh
 PYTHONPATH=.:$PYTHONPATH python test/unittests.py
 ```
+
+To build the docker image for the resource:
+``` sh
+python setup.py sdist
+docker build -t <username>/concourse-pypi-resource .
+```
