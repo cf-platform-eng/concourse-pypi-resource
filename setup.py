@@ -30,7 +30,7 @@ def get_requirements():
 
 setup(
     name = "concourse-pypi-resource",
-    version = '0.1.0',
+    version = '0.2.0',
     description = 'Concourse CI resource for PyPI packages.',
     long_description = read_readme(),
     url = 'https://github.com/cf-platform-eng/pypi-resource',
