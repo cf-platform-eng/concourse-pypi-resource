@@ -39,7 +39,6 @@ def upload_package(pkgpath, input):
     subprocess.run([
         'twine', 'upload',
         '--repository', pypi.get_pypi_repository(input),
-        '--repository-url', pypi.get_pypi_url(input),
         '--username', input['source']['username'],
         '--password', input['source']['password'],
         pkgpath
