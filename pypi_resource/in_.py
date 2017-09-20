@@ -60,7 +60,6 @@ def main():
     common.msg('Output directory: {}'.format(destdir))
     version = in_(destdir, sys.stdin)
     print(json.dumps({'version': {'version': version}}))
-    sys.exit(0)
 
 if __name__ == '__main__':
     main()

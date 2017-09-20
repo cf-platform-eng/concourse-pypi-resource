@@ -14,7 +14,7 @@
 
 import unittest
 from unittest.mock import patch
-from pypi_resource import pypi, check, in_, out, common
+from pypi_resource import *
 from distutils.version import LooseVersion
 import io
 import json
@@ -88,7 +88,7 @@ class TestCheck(unittest.TestCase):
         version = {'version': {'version': '0.9.2'}}
         instream = make_input_stream(version)
         result = check.check(instream)
-        self.assertEqual(json.loads(result), [version['version']])
+        self.assertEqual(result, [version['version']])
 
     @patch('pypi_resource.pypi.get_pypi_package_info')
     def test_has_newer_version(self, mock_info):
@@ -96,7 +96,7 @@ class TestCheck(unittest.TestCase):
         version = {'version': {'version': '0.9.1'}}
         instream = make_input_stream(version)
         result = check.check(instream)
-        self.assertEqual(json.loads(result), [{'version': '0.9.1'}, {'version': '0.9.2'}])
+        self.assertEqual(result, [{'version': '0.9.1'}, {'version': '0.9.2'}])
 
 class TestIn(unittest.TestCase):
     def test_parse_filename_from_url(self):

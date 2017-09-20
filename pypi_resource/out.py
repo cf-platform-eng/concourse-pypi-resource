@@ -44,9 +44,7 @@ def upload_package(pkgpath, input):
         pkgpath
     ], stdout=sys.stderr.fileno(), check=True)
 
-def out(srcdir, instream):
-    common.msg('Loading json input')
-    input = json.load(instream)
+def out(srcdir, input):
     common.merge_defaults(input)
     common.msg('Finding package to upload')
     pkgpath = find_package(input['params']['glob'], srcdir)
@@ -56,11 +54,10 @@ def out(srcdir, instream):
         upload_package(pkgpath, input)
     else:
         common.msg('Version {} is not a release; not uploading'.format(version))
-    print(json.dumps({'version': {'version': str(version)}}))
+    return {'version': {'version': str(version)}}
 
 def main():
-    out(sys.argv[1], sys.stdin)
-    sys.exit(0)
+    print(json.dumps(out(sys.argv[1], json.load(sys.stdin))))
 
 if __name__ == '__main__':
     main()

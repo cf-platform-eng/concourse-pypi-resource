@@ -34,10 +34,10 @@ def check(instream):
     if input.get('version', None):
         version = input['version']['version']
         versions = truncate_before(versions, version)
-    return json.dumps(versions)
+    return versions
 
 def main():
-    print(check(sys.stdin))
+    print(json.dumps(check(sys.stdin)))
 
 if __name__ == '__main__':
     main()
