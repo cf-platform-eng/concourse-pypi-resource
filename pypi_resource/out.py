@@ -39,8 +39,8 @@ def upload_package(pkgpath, input):
     subprocess.run([
         'twine', 'upload',
         '--repository', pypi.get_pypi_repository(input),
-        '--username', input['source']['username'],
-        '--password', input['source']['password'],
+        '--username', input['source'].get('username', os.getenv('TWINE_USERNAME')),
+        '--password', input['source'].get('password', os.getenv('TWINE_PASSWORD')),
         pkgpath
     ], stdout=sys.stderr.fileno(), check=True)
 
