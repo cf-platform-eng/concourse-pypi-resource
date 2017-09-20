@@ -40,8 +40,8 @@ def upload_package(pkgpath, input):
         'twine', 'upload',
         '--repository', pypi.get_pypi_repository(input),
         '--repository-url', pypi.get_pypi_url(input),
-        '-u', input['source']['username'],
-        '-p', input['source']['password'],
+        '--username', input['source']['username'],
+        '--password', input['source']['password'],
         pkgpath
     ], stdout=sys.stderr.fileno(), check=True)
 
