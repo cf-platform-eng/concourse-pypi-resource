@@ -16,6 +16,11 @@ from distutils.version import LooseVersion
 
 import requests
 
+def get_pypi_url(input):
+    if input['source']['test']:
+        return 'https://testpypi.python.org/pypi'
+    return 'https://pypi.python.org/pypi'
+
 def get_pypi_repository(input):
     if input['source']['test']:
         return 'pypitest'
