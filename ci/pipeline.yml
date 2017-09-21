@@ -33,7 +33,7 @@ resources:
 
 jobs:
 
-- name: check
+- name: check-and-get
   plan:
   - get: pypi-package
 
