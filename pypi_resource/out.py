@@ -49,11 +49,8 @@ def out(srcdir, input):
     common.msg('Finding package to upload')
     pkgpath = find_package(input['params']['glob'], srcdir)
     version = get_package_version(pkgpath)
-    if common.is_release(version):
-        common.msg('Uploading {} version {}'.format(pkgpath, version))
-        upload_package(pkgpath, input)
-    else:
-        common.msg('Version {} is not a release; not uploading'.format(version))
+    common.msg('Uploading {} version {}'.format(pkgpath, version))
+    upload_package(pkgpath, input)
     return {'version': {'version': str(version)}}
 
 def main():

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import common
+
 from distutils.version import LooseVersion
 
 import requests
@@ -36,6 +38,7 @@ def get_pypi_package_info(input):
 def get_versions_from_pypi(input):
     pypi_info = get_pypi_package_info(input)
     versions = pypi_info['releases'].keys()
+    versions = [version for version in versions if common.is_release(version)]
     versions = sorted(versions, key=LooseVersion)
     return versions
 

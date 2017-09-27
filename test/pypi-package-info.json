@@ -68,6 +68,21 @@
                 "path": "de/2a/8c3371aff8274b8c317594005aa801162489facce7cedccdb19147741344/tile_generator-0.9.2.tar.gz", 
                 "size": 37778
             }
+        ],
+        "0.9.2rc1": [
+            {
+                "has_sig": false, 
+                "upload_time": "2016-10-03T20:06:18", 
+                "comment_text": "", 
+                "python_version": "source", 
+                "url": "https://testpypi.python.org/packages/de/2a/8c3371aff8274b8c317594005aa801162489facce7cedccdb19147741344/tile_generator-0.9.2.tar.gz", 
+                "md5_digest": "89e686211bd3fc6723eeb24cd8788501", 
+                "downloads": 0, 
+                "filename": "tile_generator-0.9.2.tar.gz", 
+                "packagetype": "sdist", 
+                "path": "de/2a/8c3371aff8274b8c317594005aa801162489facce7cedccdb19147741344/tile_generator-0.9.2.tar.gz", 
+                "size": 37778
+            }
         ]
     }, 
     "urls": [

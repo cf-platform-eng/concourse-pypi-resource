@@ -30,7 +30,7 @@ def check(instream):
     input = json.load(instream)
     common.merge_defaults(input)
     versions = pypi.get_versions_from_pypi(input)
-    versions = [{'version': version} for version in versions if common.is_release(version)]
+    versions = [{'version': version} for version in versions]
     if input.get('version', None):
         version = input['version']['version']
         versions = truncate_before(versions, version)
