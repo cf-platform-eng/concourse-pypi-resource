@@ -54,7 +54,7 @@ class TestPypi(unittest.TestCase):
         input = {'source': { 'test': False } }
         self.assertEqual(pypi.get_pypi_url(input), 'https://pypi.python.org/pypi')
 
-    def test_pypi_url(self):
+    def test_pypi_repo(self):
         input = {'source': { 'test': True } }
         self.assertEqual(pypi.get_pypi_repository(input), 'pypitest')
         input = {'source': { 'test': False } }
