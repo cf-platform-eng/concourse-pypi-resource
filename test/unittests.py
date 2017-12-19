@@ -49,12 +49,16 @@ def make_input_stream(version):
 
 class TestPypi(unittest.TestCase):
     def test_pypi_url(self):
+        input = {'source': { 'repository_url': 'http://example.org/pypi' } }
+        self.assertEqual(pypi.get_pypi_url(input), 'http://example.org/pypi')
         input = {'source': { 'test': True } }
         self.assertEqual(pypi.get_pypi_url(input), 'https://testpypi.python.org/pypi')
         input = {'source': { 'test': False } }
         self.assertEqual(pypi.get_pypi_url(input), 'https://pypi.python.org/pypi')
 
     def test_pypi_repo(self):
+        input = {'source': { 'repository': "example_repo" } }
+        self.assertEqual(pypi.get_pypi_repository(input), 'example_repo')
         input = {'source': { 'test': True } }
         self.assertEqual(pypi.get_pypi_repository(input), 'pypitest')
         input = {'source': { 'test': False } }

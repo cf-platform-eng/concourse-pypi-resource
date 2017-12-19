@@ -8,6 +8,8 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 * `username`: *Required for `out`* The username for PyPI server authentication.
 * `password`: *Required for `out`* The password for PyPI server authentication.
 * `test`: *Optional, default `false`* Set to `true` to use the [PyPI test server](https://testpypi.python.org/pypi).
+* `repository_url`: *Optional* Set to a another pypi server such as pypicloud.
+* `repository`: *Optional* Set to a special index-server if it is specified in `~/.pypirc`.
 
 ### Example
 ``` yaml
