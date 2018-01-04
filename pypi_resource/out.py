@@ -36,13 +36,22 @@ def find_package(pattern, srcdir):
     return files[-1]
 
 def upload_package(pkgpath, input):
-    subprocess.run([
-        'twine', 'upload',
-        '--repository', pypi.get_pypi_repository(input),
-        '--username', input['source'].get('username', os.getenv('TWINE_USERNAME')),
-        '--password', input['source'].get('password', os.getenv('TWINE_PASSWORD')),
-        pkgpath
-    ], stdout=sys.stderr.fileno(), check=True)
+    if 'repository_url' in input['source']:
+        subprocess.run([
+            'twine', 'upload',
+            '--repository-url', pypi.get_pypi_url(input),
+            '--username', input['source'].get('username', os.getenv('TWINE_USERNAME')),
+            '--password', input['source'].get('password', os.getenv('TWINE_PASSWORD')),
+            pkgpath
+        ], stdout=sys.stderr.fileno(), check=True)
+    else:
+        subprocess.run([
+            'twine', 'upload',
+            '--repository', pypi.get_pypi_repository(input),
+            '--username', input['source'].get('username', os.getenv('TWINE_USERNAME')),
+            '--password', input['source'].get('password', os.getenv('TWINE_PASSWORD')),
+            pkgpath
+        ], stdout=sys.stderr.fileno(), check=True)
 
 def out(srcdir, input):
     common.merge_defaults(input)
