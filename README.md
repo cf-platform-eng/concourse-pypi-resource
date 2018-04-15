@@ -10,6 +10,7 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 * `test`: *Optional, default `false`* Set to `true` to use the [PyPI test server](https://testpypi.python.org/pypi).
 * `repository_url`: *Optional* Set to a another pypi server such as pypicloud.
 * `repository`: *Optional* Set to a special index-server if it is specified in `~/.pypirc`.
+* `python_version`: *Optional* If multiple files have been uploaded for a package (e.g. source tarballs and wheels), download the file for the specified version instead of the file that was first uploaded.
 
 ### Example
 ``` yaml
@@ -27,6 +28,7 @@ resources:
     username: user
     password: pass
     test: false
+    python_version: source
 ```
 
 ## `get`: Download the latest version
