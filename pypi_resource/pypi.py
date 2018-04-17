@@ -48,4 +48,10 @@ def get_versions_from_pypi(input):
 
 def get_pypi_version_url(input, version):
     pypi_info = get_pypi_package_info(input)
-    return pypi_info['releases'][version][0]['url']
+    files = pypi_info['releases'][version]
+    if 'python_version' not in input['source']:
+        return files[0]['url']
+    for file in files:
+        if file['python_version'] == input['source']['python_version']:
+            return file['url']
+    raise LookupError("No %s download found" % input['source']['python_version'])
