@@ -19,6 +19,7 @@ from distutils.version import LooseVersion
 import io
 import json
 import os
+import sys
 
 def read_file(file):
     with open(file) as f:
@@ -48,6 +49,13 @@ def make_input_stream(version):
     return make_stream(make_input(version))
 
 class TestPypi(unittest.TestCase):
+    def setUp(self):
+        newout = io.StringIO()
+        sys.stdout = newout
+
+    def tearDown(self):
+        self.assertEqual(sys.stdout.getvalue(), '', '%s sent text to stdout and this is not allowed' % self._testMethodName)
+
     def test_pypi_url(self):
         input = {'source': { 'repository_url': 'http://example.org/pypi' } }
         self.assertEqual(pypi.get_pypi_url(input), 'http://example.org/pypi')
