@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from . import common
+from .retry import retry_wrapper
 
 from distutils.version import LooseVersion
 
@@ -46,6 +47,7 @@ def get_versions_from_pypi(input):
     versions = sorted(versions, key=LooseVersion)
     return versions
 
+@retry_wrapper(5, 1)
 def get_pypi_version_url(input, version):
     pypi_info = get_pypi_package_info(input)
     files = pypi_info['releases'][version]

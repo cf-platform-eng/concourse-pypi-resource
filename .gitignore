@@ -1,3 +1,4 @@
 dist/
 concourse_pypi_resource.egg-info/
 .envrc
+*.pyc
