@@ -40,8 +40,11 @@ setup(
     ],
     keywords = [
     ],
-    packages = [ 'pypi_resource' ],
+    packages = [ 'pypi_resource', 'test' ],
     install_requires = get_requirements(),
+    setup_requires=[ 'pytest-runner' ],
+    tests_require = [ 'pytest', ],
+    test_suite = 'test',
     include_package_data = True,
     entry_points = {
         'console_scripts': [
