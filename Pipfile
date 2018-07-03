@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pkginfo = "*"
+requests = "*"
+twine = "*"
+pip = "==10.0.1"
+
+[dev-packages]
+pytest = "*"
+
