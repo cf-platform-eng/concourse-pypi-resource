@@ -29,7 +29,7 @@ def truncate_before(lst, value):
 def check(instream):
     input = json.load(instream)
     common.merge_defaults(input)
-    versions = pypi.get_versions_from_pypi(input)
+    versions = pypi.get_package_versions(input)
     versions = [{'version': version} for version in versions]
     if input.get('version', None):
         version = input['version']['version']

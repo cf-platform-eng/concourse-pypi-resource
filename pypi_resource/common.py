@@ -19,8 +19,15 @@ def msg(msg):
     print(msg, file=sys.stderr)
 
 def merge_defaults(input):
-    if not 'test' in input['source']:
-        input['source']['test'] = False
+    source = input['source']
+
+    if not 'test' in source:
+        source['test'] = False
+
+    if not 'authenticate' in source:
+        source['authenticate'] = 'out'
+    
+    assert source['authenticate'] in ['out', 'always']
 
 def is_release(version):
     return re.match('^\d+(\.\d+)*$', str(version))

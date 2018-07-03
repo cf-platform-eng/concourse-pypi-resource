@@ -16,30 +16,43 @@
 
 import unittest
 from unittest.mock import Mock
+from .unittests import make_input_nexus3
 import json
 import os
 import subprocess
 
-from pypi_resource import *
+from pypi_resource import out, pypi
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 REPODIR = os.path.join(THISDIR, '..')
 
 class TestPut(unittest.TestCase):
 
-    def test_out(self):
-        subprocess.check_call(['python', 'setup.py', 'sdist'], cwd=REPODIR)
+    def test_nexus3(self):
+        """
+        - docker run -d -p 8081:8081 --name nexus sonatype/nexus3
+        - create pypi hosted repo pypi-private
+        """
+        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
+        print("sdist returned", rc)
         out.out(
             os.path.join(REPODIR, 'dist'),
             {
-                'source': {
-                    'test': True,
-                },
-                'params': {
-                    'glob': '*.tar.gz',
-                }
+                'source': make_input_nexus3(None)['source'],
+                'params': { 'glob': '*.tar.gz' }
             }
-        )
+        )        
+
+
+class TestCheck(unittest.TestCase):
+
+    def test_search_nexus3(self):
+        input = make_input_nexus3('')
+        input['source']['name'] = 'concourse-pypi-resource'
+
+        versions = pypi.get_package_versions(input)
+        self.assertGreater(len(versions), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

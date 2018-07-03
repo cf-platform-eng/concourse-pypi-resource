@@ -23,34 +23,21 @@ from urllib.parse import urlparse
 
 import requests
 
-def download(url, filename):
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    with open(filename, 'wb') as file:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                file.write(chunk)
-
-def parse_filename_from_url(url):
-    parsed_url = urlparse(url)
-    path = parsed_url.path
-    return os.path.basename(path)
-
-def local_download_path(url, destdir):
-    basename = parse_filename_from_url(url)
-    return os.path.join(destdir, basename)
 
 def in_(destdir, instream):
     input = json.load(instream)
     common.merge_defaults(input)
     version = input['version']['version']
-    url = pypi.get_pypi_version_url(input, version)
-    dest = local_download_path(url, destdir)
-    download(url, dest)
-    version_dest = os.path.join(destdir, 'version')
-    with open(version_dest, 'w+') as file:
-        file.write(version)
-    return version
+
+    if pypi.download_with_pip(input, destdir):
+        version_dest = os.path.join(destdir, 'version')
+        with open(version_dest, 'w+') as file:
+            file.write(version)
+
+        return version
+    
+    else:
+        return None
 
 def main():
     destdir = sys.argv[1]
