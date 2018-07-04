@@ -6,7 +6,8 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 ## Source Configuration
 
   * `name`: *Required* The name of the package.
-  * `python_version`: *Optional* Package type, if multiple files have been uploaded for a package (e.g. source tarballs and wheels), download the file for the specified version instead of the file that was first uploaded.
+  * `python_version`: *Optional*
+     If multiple files have been uploaded for a package (e.g. source tarballs and wheels), download the file for the specified version instead of the file that was first uploaded. Not to be confused with the requirements environment marker `python_version`.
 
 __Authentication__
 
