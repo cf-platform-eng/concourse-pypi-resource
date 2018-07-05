@@ -14,35 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import common, pypi
-
-from distutils.version import LooseVersion
 import glob
 import json
 import os
 import subprocess
 import sys
+import warnings
+from distutils.version import LooseVersion
 
 import pkginfo
+
+from . import common, pipio
+
 
 def get_package_version(pkgpath):
     metadata = pkginfo.get_metadata(pkgpath)
     return LooseVersion(metadata.version)
 
+
 def find_package(pattern, srcdir):
     files = glob.glob(os.path.join(srcdir, pattern))
-    common.msg('Glob {} matched files: {}'.format(pattern, files))
+    warnings.warn('Glob {} matched files: {}'.format(pattern, files))
     files = sorted(files, key=get_package_version)
     return files[-1]
+
 
 def upload_package(pkgpath, input):
     twine_cmd = [ 'twine', 'upload' ]
     if 'repository_url' in input['source']:
         twine_cmd.append('--repository-url')
-        twine_cmd.append(pypi.get_pypi_url(input, 'out'))
+        twine_cmd.append(pipio.get_pypi_url(input, 'out'))
     else:
         twine_cmd.append('--repository')
-        twine_cmd.append(pypi.get_pypi_repository(input))
+        twine_cmd.append(pipio.get_pypi_repository(input))
 
     twine_cmd.append('--username')
     twine_cmd.append(input['source'].get('username', os.getenv('TWINE_USERNAME')))
@@ -52,17 +56,20 @@ def upload_package(pkgpath, input):
 
     subprocess.run(twine_cmd, stdout=sys.stderr.fileno(), check=True)
 
+
 def out(srcdir, input):
     common.merge_defaults(input)
-    common.msg('Finding package to upload')
+    warnings.warn('Finding package to upload')
     pkgpath = find_package(input['params']['glob'], srcdir)
     version = get_package_version(pkgpath)
-    common.msg('Uploading {} version {}'.format(pkgpath, version))
+    warnings.warn('Uploading {} version {}'.format(pkgpath, version))
     upload_package(pkgpath, input)
     return {'version': {'version': str(version)}}
 
+
 def main():
     print(json.dumps(out(sys.argv[1], json.load(sys.stdin))))
+
 
 if __name__ == '__main__':
     main()

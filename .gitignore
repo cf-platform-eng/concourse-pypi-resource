@@ -1,7 +1,8 @@
 dist/
-concourse_pypi_resource.egg-info/
+*.egg-info/
 .eggs/
 .envrc
 .pytest_cache/
+.venv/
 .vscode/tags
 *.pyc

@@ -12,22 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import sys
+from . import pipio
 
-def msg(msg):
-    print(msg, file=sys.stderr)
 
-def merge_defaults(input):
-    source = input['source']
+def merge_defaults(resconfig):
+    source = resconfig['source']
 
-    if not 'test' in source:
-        source['test'] = False
+    source.setdefault('test', False)
+    source.setdefault('pre_releases', False)
 
-    if not 'authenticate' in source:
-        source['authenticate'] = 'out'
-    
+    if resconfig['version'].get('version', None):
+        resconfig['version']['version'] = pipio.Version(resconfig['version']['version'])
+
+    source.setdefault('authenticate', 'out')
     assert source['authenticate'] in ['out', 'always']
-
-def is_release(version):
-    return re.match('^\d+(\.\d+)*$', str(version))
+    
+    return resconfig

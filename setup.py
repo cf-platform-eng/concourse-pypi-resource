@@ -24,24 +24,31 @@ def read_readme():
     with open(os.path.join(here, 'README.md')) as f:
         return f.read()
 
-def get_requirements():
-    with open(os.path.join(here, 'requirements.txt')) as f:
-        return f.readlines()
-
 setup(
     name = "concourse-pypi-resource",
     version = '0.2.0',
     description = 'Concourse CI resource for PyPI packages.',
     long_description = read_readme(),
+    platforms = ['linux'],
     url = 'https://github.com/cf-platform-eng/pypi-resource',
     author = 'Pivotal Cloud Foundry Platform Engineering',
     license = 'Apache 2.0',
     classifiers = [
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: POSIX :: Linux',
+        'Topic :: Software Development :: Build Tools',
     ],
     keywords = [
+        'concourse',
     ],
     packages = [ 'pypi_resource', 'test' ],
-    install_requires = get_requirements(),
+    install_requires = [
+        'pkginfo',
+        'twine',
+        'pip==10.0.1',
+    ],
     setup_requires=[ 'pytest-runner' ],
     tests_require = [ 'pytest', ],
     test_suite = 'test',

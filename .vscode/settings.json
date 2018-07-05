@@ -1,4 +1,14 @@
 {
   // Path to Python, you can use a custom version of Python by modifying this setting to include the full path.
   "python.pythonPath": "python3",
+
+  // Whether to lint Python files using flake8
+  "python.linting.flake8Enabled": false,
+
+  "python.unitTest.pyTestEnabled": true,
+  "python.unitTest.pyTestArgs": [
+    "test"
+  ],
+  "python.unitTest.unittestEnabled": false,
+  "python.unitTest.nosetestsEnabled": false,
 }

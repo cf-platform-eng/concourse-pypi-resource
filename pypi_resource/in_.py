@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import common, pypi
-
 import json
 import os
 import sys
@@ -23,13 +21,16 @@ from urllib.parse import urlparse
 
 import requests
 
+from . import common, pipio
+
+import warnings
 
 def in_(destdir, instream):
     input = json.load(instream)
     common.merge_defaults(input)
     version = input['version']['version']
 
-    if pypi.download_with_pip(input, destdir):
+    if pipio.pip_download(input, destdir):
         version_dest = os.path.join(destdir, 'version')
         with open(version_dest, 'w+') as file:
             file.write(version)
@@ -41,7 +42,7 @@ def in_(destdir, instream):
 
 def main():
     destdir = sys.argv[1]
-    common.msg('Output directory: {}'.format(destdir))
+    warnings.warn('Output directory: {}'.format(destdir))
     version = in_(destdir, sys.stdin)
     print(json.dumps({'version': {'version': version}}))
 

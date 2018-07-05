@@ -14,27 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import common, pypi
+from bisect import bisect_left
 import json
 import sys
 
-import requests
 
-def truncate_before(lst, value):
-    for index, val in enumerate(lst):
-        if val == value:
-            return lst[index:]
-    return [lst[-1]]
+from . import common, pipio
+
+
+def truncate_smaller_versions(lst, value):
+    index = bisect_left(lst, value)
+    return lst[index:] if index < len(lst) else [lst[-1]]
+
 
 def check(instream):
-    input = json.load(instream)
-    common.merge_defaults(input)
-    versions = pypi.get_package_versions(input)
-    versions = [{'version': version} for version in versions]
-    if input.get('version', None):
-        version = input['version']['version']
-        versions = truncate_before(versions, version)
+    resconfig = json.load(instream)
+    resconfig = common.merge_defaults(resconfig)
+
+    versions = pipio.get_versions_from_pip(resconfig)
+    if not resconfig['source']['pre_releases']:
+        versions = filter(lambda x: not x.is_prerelease, versions)
+    versions = list(sorted(versions))
+    
+    if resconfig.get('version', None):
+        target_version = resconfig['version']['version']
+        versions = truncate_smaller_versions(versions, target_version)
+
+    versions = [{'version': str(version)} for version in versions]
     return versions
+
 
 def main():
     print(json.dumps(check(sys.stdin)))
