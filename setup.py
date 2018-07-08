@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from setuptools import setup
+from distutils.version import LooseVersion
 import os
 import sys
 
@@ -24,9 +25,14 @@ def read_readme():
     with open(os.path.join(here, 'README.md')) as f:
         return f.read()
 
+def read_version():
+    with open(os.path.join(here, '.version')) as f:
+        version = f.read()
+    return str(LooseVersion(version))
+
 setup(
     name = "concourse-pypi-resource",
-    version = '0.2.0',
+    version = read_version(),
     description = 'Concourse CI resource for PyPI packages.',
     long_description = read_readme(),
     platforms = ['linux'],

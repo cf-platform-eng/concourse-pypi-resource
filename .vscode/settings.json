@@ -3,7 +3,10 @@
   "python.pythonPath": "python3",
 
   // Whether to lint Python files using flake8
-  "python.linting.flake8Enabled": false,
+  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Args": [
+    "--max-line-length=120"
+  ],
 
   "python.unitTest.pyTestEnabled": true,
   "python.unitTest.pyTestArgs": [
@@ -11,4 +14,9 @@
   ],
   "python.unitTest.unittestEnabled": false,
   "python.unitTest.nosetestsEnabled": false,
+
+  "files.exclude": {
+    "**/.git": true,
+    "**/__pycache__": true
+  }  
 }
