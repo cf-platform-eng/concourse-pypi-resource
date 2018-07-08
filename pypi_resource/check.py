@@ -14,38 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from bisect import bisect_left
 import json
 import sys
-
+from bisect import bisect_left
 
 from . import common, pipio
 
 
 def truncate_smaller_versions(lst, value):
-    index = bisect_left(lst, value)
-    return lst[index:] if index < len(lst) else [lst[-1]]
+    if not lst:
+        return []
+    elif not value:
+        return lst
+    else:
+        index = bisect_left(lst, value)
+        return lst[index:] if index < len(lst) else [lst[-1]]
 
 
 def check(instream):
     resconfig = json.load(instream)
     resconfig = common.merge_defaults(resconfig)
+    common.msg("{}", resconfig)
 
     versions = pipio.get_versions_from_pip(resconfig)
-    if not resconfig['source']['pre_releases']:
-        versions = filter(lambda x: not x.is_prerelease, versions)
-    versions = list(sorted(versions))
-    
-    if resconfig.get('version', None):
-        target_version = resconfig['version']['version']
-        versions = truncate_smaller_versions(versions, target_version)
+    common.msg("{}", versions)
 
-    versions = [{'version': str(version)} for version in versions]
-    return versions
+    versions = truncate_smaller_versions(versions, resconfig['version']['version'])
+
+    return [{'version': str(version)} for version in versions]
 
 
 def main():
     print(json.dumps(check(sys.stdin)))
+
 
 if __name__ == '__main__':
     main()

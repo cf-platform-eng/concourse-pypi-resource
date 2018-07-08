@@ -17,34 +17,27 @@
 import json
 import os
 import sys
-from urllib.parse import urlparse
-
-import requests
 
 from . import common, pipio
 
-import warnings
 
 def in_(destdir, instream):
-    input = json.load(instream)
-    common.merge_defaults(input)
-    version = input['version']['version']
+    resconfig = json.load(instream)
+    common.merge_defaults(resconfig)
 
-    if pipio.pip_download(input, destdir):
-        version_dest = os.path.join(destdir, 'version')
-        with open(version_dest, 'w+') as file:
-            file.write(version)
+    version = pipio.pip_download(resconfig, destdir)
+    with open(os.path.join(destdir, 'version'), 'w') as file:
+        file.write(version)
 
-        return version
-    
-    else:
-        return None
+    return str(version)
+
 
 def main():
     destdir = sys.argv[1]
-    warnings.warn('Output directory: {}'.format(destdir))
+    common.msg('Output directory: {}', destdir)
     version = in_(destdir, sys.stdin)
     print(json.dumps({'version': {'version': version}}))
+
 
 if __name__ == '__main__':
     main()

@@ -11,23 +11,16 @@
 # limitations under the License.
 
 import os
-import re
-import warnings
-from typing import List
+import sys
+from contextlib import redirect_stdout
+from typing import List, Tuple
 from urllib.parse import urlsplit, urlunsplit
 
-from pip._internal.basecommand import SUCCESS, Command
 from pip._internal.commands import DownloadCommand as PipDownloadCommand
-from pip._internal.commands import SearchCommand as PipSearchCommand
-from pip._internal.download import PipXmlrpcTransport
-from pip._internal.exceptions import CommandError
-from pip._internal.operations.prepare import RequirementPreparer
-from pip._internal.req import RequirementSet
-from pip._internal.status_codes import NO_MATCHES_FOUND
-from pip._internal.utils.misc import ensure_dir, normalize_path
-from pip._internal.utils.temp_dir import TempDirectory
 from pip._vendor.packaging.version import Version
-from pip._vendor.six.moves import xmlrpc_client
+from pip._internal.req import RequirementSet
+
+from . import common, out
 
 
 class ListVersionsCommand(PipDownloadCommand):
@@ -44,11 +37,6 @@ class ListVersionsCommand(PipDownloadCommand):
         else:
             python_versions = None
 
-        options.src_dir = os.path.abspath(options.src_dir)
-        options.download_dir = normalize_path(options.download_dir)
-
-        ensure_dir(options.download_dir)
-
         with self._build_session(options) as session:
             finder = self._build_package_finder(
                 options=options,
@@ -57,65 +45,76 @@ class ListVersionsCommand(PipDownloadCommand):
                 python_versions=python_versions,
                 abi=options.abi,
                 implementation=options.implementation,
-            )            
+            )
+
+            requirement_set = RequirementSet(
+                require_hashes=options.require_hashes,
+            )
+            self.populate_requirement_set(
+                requirement_set,
+                args,
+                options,
+                finder,
+                session,
+                self.name,
+                None
+            )
+
             candidates = []
-            for pkg in args:
-                candidates.extend(finder.find_all_candidates(pkg))
+            for req in requirement_set.requirements.values():
+                # extract from finder.find_requirement
+                all_candidates = finder.find_all_candidates(req.name)      
+                candidates.extend(all_candidates)
 
         self.candidates = candidates
 
 
-def _is_deprecated_python_version(python_version):
-    if python_version:
-        return not re.match(r'\d+(\.\d+){0,2}', python_version) is None
-    return False
+def _input_to_download_args(resconfig, destdir=None) -> List[str]:
+    package_name = resconfig['source']['name']
+    package_version = resconfig['version']['version']
 
-
-def _input_to_download_args(input, destdir=None):
-    package_name = input['source']['name']
-    package_version = input['version']['version']
-
-    args = [ '--no-deps' ]
+    args = ['--no-deps', ]
 
     # abi
     # implementation
     # platform
-    if input['pre_releases']:
+    if resconfig['source']['pre_release']:
         args.append('--pre')
 
-    python_version = input['source'].get('python_version', None)
-    if _is_deprecated_python_version(python_version):
-        if input['source'].get('python_version','') == 'source':
-            args.extend( ['--no-binary', ':all:'] )
-        else:
-            warnings.warn('python_version format is deprecated. Only "source" or numeric python version allowed.', DeprecationWarning)
-    elif python_version is not None:
-        args.extend([ '--python-version', python_version ])
+    if resconfig['source']['packaging'] == 'source':
+        args.extend(['--no-binary', ':all:'])
+    elif resconfig['source']['packaging'] == 'binary':
+        args.extend(['--only-binary', ':all:'])
+
+    if resconfig['source']['python_version']:
+        args.extend(['--python-version', resconfig['source']['python_version']])
 
     if destdir:
-        args.extend( [ '--dest', destdir ])
+        args.extend(['--dest', destdir])
 
-    if 'index_url' in input['source']:
-        args.extend( ['--index-url', get_pypi_url(input, kind='index')] )
+    if 'index_url' in resconfig['source']['repository']:
+        url, hostname = get_pypi_url(resconfig, kind='index')
+        args.extend(['--index-url', url,
+                     '--trusted-host', hostname])
 
-    args.append(package_name + ('==' + package_version if package_version else ''))
+    args.append(package_name + ('=={}'.format(package_version) if package_version else ''))
     return args
 
 
-def get_pypi_repository(input):
-    if 'repository' in input['source']:
-        return input['source']['repository']
-    elif input['source']['test']:
+def get_pypi_repository(resconfig) -> str:
+    if 'name' in resconfig['source']['repository']:
+        return resconfig['source']['repository']['name']
+    elif resconfig['source']['test']:
         return 'pypitest'
     return 'pypi'
 
 
-def get_pypi_url(input, mode='in', kind='repository'):
+def get_pypi_url(input, mode='in', kind='repository') -> Tuple[str, str]:
+    repocfg = input['source']['repository']
+
     key = '%s_url' % (kind,)
-
-    if key in input['source']:
-        url = input['source'][key]
-
+    if key in repocfg:
+        url = repocfg[key]
     elif input['source']['test']:
         url = 'https://testpypi.python.org/pypi'
     else:
@@ -123,40 +122,71 @@ def get_pypi_url(input, mode='in', kind='repository'):
     
     url_parts = urlsplit(url)
 
-    if mode == 'out' or input['source'].get('authenticate', None) == 'always':
-        hostname = '%s:%s@%s' % (
-            input['source'].get('username', ''),
-            input['source'].get('password', ''),
+    if mode == 'out' or repocfg.get('authenticate', None) == 'always':
+        host_login = '%s:%s@%s' % (
+            repocfg.get('username', ''),
+            repocfg.get('password', ''),
             url_parts[1]
         )
+        host_login = host_login.lstrip(':@')
     else:
-        hostname = url_parts[1]
+        host_login = url_parts[1]
 
     url = urlunsplit((
         url_parts[0],
-        hostname.lstrip(':@'),
+        host_login,
         url_parts[2],
         url_parts[3],
         url_parts[4]
     ))
 
-    return url
+    hostname = url_parts[1].split(':')[0]
+    return url, hostname
 
 
-def get_versions_from_pip(resconfig):
+def get_versions_from_pip(resconfig) -> List[Version]:
     args = _input_to_download_args(resconfig)
 
-    cmd = ListVersionsCommand()
-    if cmd.main(args) == 0:
-        versions = [x.version for x in cmd.candidates]
-        return versions
-    else:
-        return []
+    with redirect_stdout(sys.stderr):
+        cmd = ListVersionsCommand()
+        rc = cmd.main(args)
+        if rc == 0:
+            candidates = cmd.candidates
+        else:
+            common.msg("List Versions returned {}", rc)
+            candidates = []
+
+    # https://www.python.org/dev/peps/pep-0440
+    if not resconfig['source']['pre_release']:
+        candidates = filter(lambda x: not (x.version.is_prerelease or x.version.is_devrelease), candidates)
+    if not resconfig['source']['release']:
+        candidates = filter(lambda x: (x.version.is_prerelease or x.version.is_devrelease), candidates)
+
+    if resconfig['source'].get('filename_match', None):
+        matchstr = resconfig['source']['filename_match']
+        candidates = filter(lambda x: matchstr in x.location.filename, candidates)
+
+    versions = {x.version for x in candidates}
+    versions = list(sorted(versions))
+    return versions
 
 
-def pip_download(resconfig, destdir):
+def pip_download(resconfig, destdir) -> str:
     args = _input_to_download_args(resconfig, destdir=destdir)
 
-    cmd = PipDownloadCommand()
-    result = cmd.main(args)
-    return result == 0
+    with redirect_stdout(sys.stderr):
+        cmd = PipDownloadCommand()
+        result = cmd.main(args)
+        
+    if result == 0:
+        destfiles = os.listdir(destdir)
+        assert len(destfiles) == 1
+        version = resconfig['version']['version']
+        if not version:
+            version = out.get_package_version(destfiles[0])
+            common.msg("downloaded a latest version which identified as {}", version)
+            
+        return str(version)
+    
+    else:
+        return None

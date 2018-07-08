@@ -15,43 +15,154 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import Mock
-from .unittests import make_input_nexus3
-import json
 import os
 import subprocess
+import shutil
+import tempfile
 
-from pypi_resource import out, pypi
+from pypi_resource import common, out, pipio
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 REPODIR = os.path.join(THISDIR, '..')
 
-class TestPut(unittest.TestCase):
 
-    def test_nexus3(self):
-        """
+def make_input(version, **kwargs):
+    """
+    Provide a valid configuration template to connect to a local integration-test repository.
+
+    .. note::
+
+        Setting a local Nexus3:
         - docker run -d -p 8081:8081 --name nexus sonatype/nexus3
         - create pypi hosted repo pypi-private
-        """
-        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
-        print("sdist returned", rc)
-        out.out(
-            os.path.join(REPODIR, 'dist'),
-            {
-                'source': make_input_nexus3(None)['source'],
-                'params': { 'glob': '*.tar.gz' }
-            }
-        )        
+        - disable anonymous access
+
+    :see https://help.sonatype.com/repomanager3/pypi-repositories#PyPIRepositories-HostingPyPIRepositories
+    """
+    resconfig = {
+        'source': {
+            'name': 'somedemo',
+            'username': 'admin',
+            'password': 'admin123',
+            'repository': {
+                'authenticate': 'always',
+                'index_url': 'http://localhost:8081/repository/pypi-private/simple',
+                'repository_url': 'http://localhost:8081/repository/pypi-private/',
+            },
+            'pre_release': True,
+        },
+        'version': version,
+    }
+    resconfig['source'].update(kwargs)
+    return resconfig
+
+
+# class TestPut(unittest.TestCase):
+# 
+#     def test_nexus3(self):
+#         rc = subprocess.run(['pipenv', 'run', 'python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
+#         print("sdist returned", rc)
+#         out.out(
+#             os.path.join(REPODIR, 'dist'),
+#             {
+#                 'source': make_input(None)['source'],
+#                 'params': {'glob': '*.tar.gz'}
+#             }
+#         )
 
 
 class TestCheck(unittest.TestCase):
 
-    def test_search_nexus3(self):
-        input = make_input_nexus3('')
-        input['source']['name'] = 'concourse-pypi-resource'
+    @classmethod
+    def setUpClass(cls):
+        super(TestCheck, cls).setUpClass()
+        # upload the test-set
+#         src = os.path.join(THISDIR, 'test_dist')
+#         for fn in os.listdir(src):
+#             out.out(src,
+#                     {
+#                         'source': make_input(None)['source'],
+#                         'params': {'glob': fn}
+#                     }
+#             )         
 
-        versions = pypi.get_package_versions(input)
-        self.assertGreater(len(versions), 0)
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+    
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir)
+    
+    def get_versions(self, **kwargs):
+        resconfig = make_input(None, **kwargs)
+        resconfig = common.merge_defaults(resconfig)
+        versions = pipio.get_versions_from_pip(resconfig)
+        return versions
+    
+    def get_download(self, **kwargs):
+        resconfig = make_input(None, **kwargs)
+        resconfig = common.merge_defaults(resconfig)
+        return pipio.pip_download(resconfig, self.temp_dir)
+
+
+    def test_search_nexus3_filename_filter(self):
+        versions = self.get_versions(
+            name='test_package1',
+            python_version='py2.py3',
+            packaging='any',
+        )
+        self.assertListEqual(versions, [pipio.Version('1.0.1')])
+
+
+    def test_search_prerelease(self):
+        versions = self.get_versions(
+            name='test_package1',
+            pre_release=True,
+        )
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])
+
+        versions = self.get_versions(
+            name='test_package1',
+            pre_release=False,
+        )
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])                
+
+
+    def test_download_latest(self):
+        result = self.get_download(
+            name='test_package1',
+            packaging='source',
+        )
+        self.assertTrue(result)
+        self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'test_package1-1.0.1.tar.gz')))
+
+
+    def test_search_nexus3_pyversion(self):
+        versions = self.get_versions(
+            name='test_package1',
+            python_version='2',
+            packaging='any',
+        )
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])
+
+        versions = self.get_versions(
+            name='test_package1',
+            python_version='2',
+            packaging='binary',
+        )
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])
+
+        versions = self.get_versions(
+            name='test_package1',
+            python_version='3',
+            packaging='any',
+        )
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])
+
+        versions = self.get_versions(
+            name='test_package1',
+            packaging='source',
+        )
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])        
 
 
 if __name__ == '__main__':
