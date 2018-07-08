@@ -1,0 +1,16 @@
+pypi:
+  index_url: http://192.168.1.106:8081/repository/pypi-private/simple
+  repository_url: http://192.168.1.106:8081/repository/pypi-private/
+  authenticate: always
+  username: admin
+  password: admin123
+
+pypi_upload:
+  index_url: http://192.168.1.106:8081/repository/pypi-release/simple
+  repository_url: http://192.168.1.106:8081/repository/pypi-release/
+  authenticate: always
+  username: admin
+  password: admin123
+  
+pypi_resource_image: punkadiddle/concourse-pypi-resource
+pypi_resource_tag: 0.3.0-rc.25
