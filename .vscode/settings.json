@@ -5,7 +5,8 @@
   // Whether to lint Python files using flake8
   "python.linting.flake8Enabled": true,
   "python.linting.flake8Args": [
-    "--max-line-length=120"
+    "--max-line-length=120",
+    "--ignore=W293"
   ],
 
   "python.unitTest.pyTestEnabled": true,

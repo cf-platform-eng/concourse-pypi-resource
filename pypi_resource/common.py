@@ -67,7 +67,6 @@ def merge_defaults(resconfig):
     # setup source
     #
     source = resconfig['source']
-    source.setdefault('test', False)
     source.setdefault('pre_release', False)
     source.setdefault('release', True)
     source.setdefault('packaging', 'any')
@@ -104,7 +103,7 @@ def merge_defaults(resconfig):
             repository[key] = source.pop(key)
 
     if source.get('test', False):
-        repository['repsitory_url'] = 'https://testpypi.python.org/pypi'
+        repository['repository_url'] = 'https://testpypi.python.org/pypi'
         repository['index_url'] = 'https://testpypi.python.org/pypi'
 
     #

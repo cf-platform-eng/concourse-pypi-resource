@@ -14,13 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import os
-import subprocess
 import shutil
 import tempfile
+import unittest
 
-from pypi_resource import common, out, pipio
+from pypi_resource import common, pipio
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 REPODIR = os.path.join(THISDIR, '..')
@@ -95,14 +94,13 @@ class TestCheck(unittest.TestCase):
     def get_versions(self, **kwargs):
         resconfig = make_input(None, **kwargs)
         resconfig = common.merge_defaults(resconfig)
-        versions = pipio.get_versions_from_pip(resconfig)
+        versions = pipio.pip_get_versions(resconfig)
         return versions
     
     def get_download(self, **kwargs):
         resconfig = make_input(None, **kwargs)
         resconfig = common.merge_defaults(resconfig)
         return pipio.pip_download(resconfig, self.temp_dir)
-
 
     def test_search_nexus3_filename_filter(self):
         versions = self.get_versions(
@@ -111,7 +109,6 @@ class TestCheck(unittest.TestCase):
             packaging='any',
         )
         self.assertListEqual(versions, [pipio.Version('1.0.1')])
-
 
     def test_search_prerelease(self):
         versions = self.get_versions(
@@ -126,7 +123,6 @@ class TestCheck(unittest.TestCase):
         )
         self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])                
 
-
     def test_download_latest(self):
         result = self.get_download(
             name='test_package1',
@@ -134,7 +130,6 @@ class TestCheck(unittest.TestCase):
         )
         self.assertTrue(result)
         self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'test_package1-1.0.1.tar.gz')))
-
 
     def test_search_nexus3_pyversion(self):
         versions = self.get_versions(

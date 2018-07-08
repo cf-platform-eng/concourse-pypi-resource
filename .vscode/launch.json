@@ -14,6 +14,16 @@
             "pythonPath": "${workspaceFolder}/.venv/bin/python",
         },
         {
+            "name": "Python: Debug unittests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/unittests.py",
+            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"
+            }
+        },  
+        {
             "name": "Python: Debug nexus-integration",
             "type": "python",
             "request": "launch",

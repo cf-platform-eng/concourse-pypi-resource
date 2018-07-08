@@ -20,7 +20,7 @@ import sys
 
 from unittest.mock import patch
 
-from pypi_resource import check, in_, pipio
+from pypi_resource import check, common, pipio
 
 
 here = os.path.dirname(os.path.realpath(__file__))
@@ -50,40 +50,62 @@ def make_input_stream(version, **kwargs):
     return make_stream(make_input(version, **kwargs))
 
 
+class TestConfiguration(unittest.TestCase):
+    def test_repository_name_deprecated(self):
+        resconfig = {'source': {'repository': 'foo'}}
+        with self.assertRaises(ValueError):
+            common.merge_defaults(resconfig)
+
+    def test_repository_props_migrated(self):
+        expected = {'source': {'repository': {'authenticate': 'out', 'username': 'u', 'password': 'p', 'repository_url': 'url'}}}
+        resconfig = {'source': {'username': 'u', 'password': 'p', 'repository_url': 'url'}}
+        result = common.merge_defaults(resconfig)
+
+        self.assertDictEqual(expected['source']['repository'], result['source']['repository'])
+
+
 class TestPypi(unittest.TestCase):
     def setUp(self):
         newout = io.StringIO()
         sys.stdout = newout
 
     def tearDown(self):
-        self.assertEqual(sys.stdout.getvalue(), '', '%s sent text to stdout and this is not allowed' % self._testMethodName)
+        self.assertEqual(sys.stdout.getvalue(), '',
+                         '%s sent text to stdout and this is not allowed' % self._testMethodName)
 
     def test_pypi_url(self):
         input = {'source': {'repository_url': 'http://example.org/pypi'}}
-        self.assertEqual(pipio.get_pypi_url(input), 'http://example.org/pypi')
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('http://example.org/pypi', 'example.org'))
+
+        input = {'source': {'repository': {'repository_url': 'http://example.org/pypi'}}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('http://example.org/pypi', 'example.org'))
+
+        input = {'source': {'repository': {'authenticate': 'always', 'username': 'u', 'password': 'p'}}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://u:p@pypi.python.org/pypi', 'pypi.python.org'))
+
+        input = {'source': {'repository': {'username': 'u', 'password': 'p'}}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://pypi.python.org/pypi', 'pypi.python.org'))
+        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('https://u:p@pypi.python.org/pypi', 'pypi.python.org'))
+
+        input = {'source': {'repository': {
+                            'username': 'admin', 'password': 'admin123', 'authenticate': 'always', 
+                            'repository_url': 'http://localhost:8081/repository/pypi-private/'
+        }}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('http://admin:admin123@localhost:8081/repository/pypi-private/', 'localhost'))
+
+    def test_pypi_test_url(self):
         input = {'source': {'test': True}}
-        self.assertEqual(pipio.get_pypi_url(input), 'https://testpypi.python.org/pypi')
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('https://testpypi.python.org/pypi', 'testpypi.python.org'))
+
         input = {'source': {'test': False}}
-        self.assertEqual(pipio.get_pypi_url(input), 'https://pypi.python.org/pypi')
-
-        input = {'source': {'test': False, 'authenticate': 'always', 'username': 'u', 'password': 'p'}}
-        self.assertEqual(pipio.get_pypi_url(input, 'in'), 'https://u:p@pypi.python.org/pypi')
-        input = {'source': {'test': False, 'username': 'u', 'password': 'p'}}
-        self.assertEqual(pipio.get_pypi_url(input, 'in'), 'https://pypi.python.org/pypi')
-        input = {'source': {'test': False, 'username': 'u', 'password': 'p'}}
-        self.assertEqual(pipio.get_pypi_url(input, 'out'), 'https://u:p@pypi.python.org/pypi')
-
-        input = {'source': {'username': 'admin', 'password': 'admin123', 'authenticate': 'always', 
-                            'repository_url': 'http://localhost:8081/repository/pypi-private/'}}
-        self.assertEqual(pipio.get_pypi_url(input, 'out'), 'http://admin:admin123@localhost:8081/repository/pypi-private/')
-
-    def test_pypi_repo(self):
-        input = {'source': {'repository': "example_repo"}}
-        self.assertEqual(pipio.get_pypi_repository(input), 'example_repo')
-        input = {'source': {'test': True}}
-        self.assertEqual(pipio.get_pypi_repository(input), 'pypitest')
-        input = {'source': {'test': False}}
-        self.assertEqual(pipio.get_pypi_repository(input), 'pypi')
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('https://pypi.python.org/pypi', 'pypi.python.org'))
 
 
 class TestCheck(unittest.TestCase):
@@ -93,7 +115,7 @@ class TestCheck(unittest.TestCase):
         self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 3), [3])
         self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 4), [3])
 
-    @patch('pypi_resource.pipio.get_versions_from_pip')
+    @patch('pypi_resource.pipio.pip_get_versions')
     def test_newest_version(self, mock_info):
         mock_info.return_value = canned_versions
         version = {'version': '0.9.2'}
@@ -101,7 +123,7 @@ class TestCheck(unittest.TestCase):
         result = check.check(instream)
         self.assertEqual(result, [version])
 
-    @patch('pypi_resource.pipio.get_versions_from_pip')
+    @patch('pypi_resource.pipio.pip_get_versions')
     def test_has_newer_version(self, mock_info):
         mock_info.return_value = canned_versions
         version = {'version': '0.9.1'}
@@ -109,7 +131,7 @@ class TestCheck(unittest.TestCase):
         result = check.check(instream)
         self.assertEqual(result, [{'version': '0.9.1'}, {'version': '0.9.2'}])
 
-    @patch('pypi_resource.pipio.get_versions_from_pip')
+    @patch('pypi_resource.pipio.pip_get_versions')
     def test_has_newer_prerelease(self, mock_info):
         mock_info.return_value = canned_versions
         version = {'version': '0.9.2'}
@@ -119,4 +141,4 @@ class TestCheck(unittest.TestCase):
 
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

@@ -17,11 +17,12 @@
 import json
 import sys
 from bisect import bisect_left
+from typing import List
 
 from . import common, pipio
 
 
-def truncate_smaller_versions(lst, value):
+def truncate_smaller_versions(lst: List, value: pipio.Version) -> List:
     if not lst:
         return []
     elif not value:
@@ -34,9 +35,15 @@ def truncate_smaller_versions(lst, value):
 def check(instream):
     resconfig = json.load(instream)
     resconfig = common.merge_defaults(resconfig)
-    common.msg("{}", resconfig)
 
-    versions = pipio.get_versions_from_pip(resconfig)
+    versions = pipio.pip_get_versions(resconfig)
+
+    if not resconfig['source']['pre_release']:
+        versions = filter(lambda x: not (x.is_prerelease or x.is_devrelease), versions)
+    if not resconfig['source']['release']:
+        versions = filter(lambda x: (x.is_prerelease or x.is_devrelease), versions)
+
+    versions = list(sorted(versions))
     common.msg("{}", versions)
 
     versions = truncate_smaller_versions(versions, resconfig['version']['version'])
