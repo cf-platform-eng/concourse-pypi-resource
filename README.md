@@ -1,116 +1,133 @@
 # PyPI Package Resource
-A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.python.org/pypi) packages.
+Am enhanced fork of XXX, a [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.python.org/pypi) packages.
 
-Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatformeng/concourse-pypi-resource/.
+It can be used to check/download existing packages and to manages your own builds as well. Internally it uses [Pip 10.0.1](https://pip.pypa.io/en/stable/reference/pip_download/#options) for *check* and *in* (downloads) and [twine] for *out*put.
 
-## Source Configuration
+Docker image publicly available on Docker Hub: https://hub.docker.com/r/punkadiddle/concourse-pypi-resource.
 
-  * `name`: *Required* The name of the package.
-  * `python_version`: *Optional*
-     If multiple files have been uploaded for a package (e.g. source tarballs and wheels), download the file for the specified version instead of the file that was first uploaded. Not to be confused with the requirements environment marker `python_version`.
+## Resource Configuration
 
-__Authentication__
+|Parameter                   |default|status   |description
+|----------------------------|-------|---------|-----------
+|__PACKAGE SELECTION__
+|`name`                      |-       |required | name of the package
+|`pre_release`               |`false` |optional | check dev and pre-release versions (see [PEP-440](https://www.python.org/dev/peps/pep-0440))
+|`release`                   |`true`  |optional | check release versions
+|`filename_match`            |-/-     |optional | only include packages containing this string (e.g. `py2.py3`, `.whl`)
+|`packaging`                 |`any`   |optional | only include `source` or `binary` (or `any`) packages
+|`python_version`            |-/-     |optional | only include packages compatible with this Python interpreter version number (see [pip's `--python-version`]((https://pip.pypa.io/en/stable/reference/pip_download/#options)))
+|__REPOSITORY__
+|`repository.test`           |`false` |optional | set to `true` a shortcut to use the [PyPI test server](https://testpypi.python.org/pypi) for `index_url` and `repository_url`
+|`repository.index_url`      |[PyPi](https://pypi.python.org/pypi)|optional         | url to a pip compatible index for check and download
+|`repository.repository_url` |[PyPi](https://pypi.python.org/pypi)|optional         | url to a twine compatible repository for ulpad
+|`repository.username`       |-/-     |req. for uploads | username for PyPI server authentication
+|`repository.password`       |-/-     |req. for uploads | password for PyPI server authentication
+|`repository.authenticate`   |out     |optional         | set to `always` to authenticate to a private repository for check and download also
 
-  * `username`: *Required for `out`, optional for `in`*
-    The username for PyPI server authentication.
-  * `password`: *Required for `out`, optional for `in`*
-     The password for PyPI server authentication.
-  * `authenticate`: *Optional, default `out`*
-     Set to `always` to authenticate for read operations too.
-
-__Repository__
-
-  * `test`: *Optional, default `false`* Set to `true` to use the [PyPI test server](https://testpypi.python.org/pypi).
-  * `repository_url`: *Optional* Set to a another pypi server such as pypicloud.
-  * `repository`: *Optional* Set to a special index-server name if it is specified in `~/.pypirc`.
+### Deprecated parameters (since version 0.2.0)
+* `python_version`: gets mapped to `filename_match` if it's not a version number. `python_version` is now only used for the actual interpreter version have a transparent mapping to pip.
+* ~~`repository`~~: (special index-server name if it is specified in `~/.pypirc`). This is no longer available to the current implementation of check and in. Also there's no way to inject a `.pypirc` file into this Concourse resource type.
+* `repository`, `test`, `username` and `password`: get mapped to `repository.<key>`. This allows to configure private repositories through a single yaml-map parameter value, thus removing redundancy from the pipeline.
 
 
-### Example
+## Examples
 ``` yaml
 resource_types:
 - name: pypi
   type: docker-image
   source:
-    repository: cfplatformeng/concourse-pypi-resource
+    repository: punkadiddle/concourse-pypi-resource
 
 resources:
-- name: my-pypi-package
+- name: my-public-package
   type: pypi
   source:
     name: my_package
     username: user
     password: pass
-    test: false
-    python_version: source
+    packaging: any
 
 - name: my-private-package
   type: pypi
   source:
     name: my_package
-    username: admin
-    password: admin123
-    authenticate: always
-    index_url: http://localhost:8081/repository/pypi-private/simple
-    repository_url: http://localhost:8081/repository/pypi-private/
-    python_version: source
+    pre_release: true
+    repository:
+      authenticate: always
+      index_url: http://nexus.local:8081/repository/pypi-private/simple
+      repository_url: http://nexus.local:8081/repository/pypi-private/
+      username: admin
+      password: admin123
 
 ```
 
 ## `get`: Download the latest version
 No parameters.
 __TODO__
- * `version`: *Optional, defaults to `latest`*
+ * `version.version`: *Optional, defaults to latest version
 
 ### Additional files populated
- * `version`: the latest version
+ * `version`: version number of the downloaded package
 
 ### Example
-``` yaml
+```yaml
 plan:
-- get: my-pypi-package
+- get: my-public-package
+- get: my-private-package
+  version: {version: '4.2'}
 ```
 
 ## `put`: Upload a new version
 * `glob`: *Required* A [glob](https://docs.python.org/2/library/glob.html) expression matching the package file to upload.
 
 ### Example
-``` yaml
+```yaml
 plan:
 - put: my-pypi-package
   params:
-    glob: my_package-*.tar.gz
+    glob: 'task-out-folder/my_package-*.tar.gz'
 ```
 
 ## Development
 To run the unit tests, go to the root of the repository and run:
 
 ``` sh
-pipenv --three install --dev
-pipenv run python -m pytest -v test/unittests.py
+# install pipenv
+pip3 install --user pipenv
+# setup and run unittests
+make test
 ```
 
 To build the docker image for the resource:
 ``` sh
-python setup.py sdist
-docker build -t <username>/concourse-pypi-resource .
+# package
+make dist
+# optionally upload
+make push
 ```
 
-### Nexus Integration Tests
-* Spin-up a docker instance of Nexus 3:
+### Private repository integration tests (using Sonatype Nexus 3)
+* Spin-up a docker instance of [Nexus 3](https://hub.docker.com/r/sonatype/nexus3):
   ```sh
   docker run -d -p 8081:8081 --name nexus sonatype/nexus3
   ```
-* Create a pypi hosted repo `pypi-private`.
+* Create pypi hosted repositories called `pypi-private` and `pypi-release` (enable redeploy).
 * Disable user anonymous access.
 
 ```sh
-python setup.py sdist
-pipenv run python -m pytest test/nexus-integration.py
+# ensure test-packages are built
+make test
+pipenv run python -m pytest "test/nexus-integration.py"
+```
+
+Test using Concourse CI. Check that the provided params match your repository.
+```sh
+fly -t test sp -p demo -c test/ci/pipeline.yml -l test/ci/params.yml
 ```
 
 ### Public Integration Tests
 ```sh
-# provide login data to be able to upload concourse-pypi-reousource
+# provide login data to be able to upload concourse-pypi-resource
 export TWINE_USERNAME=<...>
 export TWINE_PASSWORD=<...>
 python -m pytest -v test/pypi-integration.py 
