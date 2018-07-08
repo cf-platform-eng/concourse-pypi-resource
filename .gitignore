@@ -8,6 +8,8 @@
 
 ### Other editors
 .*.swp
+.vscode/tags
+.vscode/.*
 
 
 ### Python template
