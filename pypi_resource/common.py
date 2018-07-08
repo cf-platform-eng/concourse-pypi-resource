@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import pipio
-import sys
 import re
+import sys
 from distutils.version import LooseVersion
 
 import pkginfo
+
+from . import pipio
+
 
 def msg(msg, *args, **kwargs):
     print(msg.format(*args, **kwargs), file=sys.stderr)
 
 
-def is_deprecated_python_version(python_version:str) -> bool:
+def is_deprecated_python_version(python_version: str) -> bool:
     if python_version:
         match = re.fullmatch(r'\d+(\.\d+){0,2}', python_version)
         return not match
@@ -44,6 +46,7 @@ def check_source(resconfig):
         'packaging',
         'pre_release',
         'release',
+        'test',
     }
     
     delta = keys.difference(available_keys, deprecated_keys)
@@ -89,10 +92,9 @@ def merge_defaults(resconfig):
     #
     # setup source.repository
     #
-    repository = source.get('repository', dict())
+    repository = source.setdefault('repository', dict())
     if not isinstance(repository, dict):
-        repository = {'name': repository}
-        source['repository'] = repository
+        raise ValueError('ERROR: Repository names are deprecated.')
     repository.setdefault('authenticate', 'out')
     assert repository['authenticate'] in ['out', 'always']
 
@@ -100,6 +102,10 @@ def merge_defaults(resconfig):
     for key in ['username', 'password', 'repository_url']:
         if key in source:
             repository[key] = source.pop(key)
+
+    if source.get('test', False):
+        repository['repsitory_url'] = 'https://testpypi.python.org/pypi'
+        repository['index_url'] = 'https://testpypi.python.org/pypi'
 
     #
     # setup version

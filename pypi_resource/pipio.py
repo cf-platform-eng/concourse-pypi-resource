@@ -17,10 +17,10 @@ from typing import List, Tuple
 from urllib.parse import urlsplit, urlunsplit
 
 from pip._internal.commands import DownloadCommand as PipDownloadCommand
-from pip._vendor.packaging.version import Version
 from pip._internal.req import RequirementSet
+from pip._vendor.packaging.version import Version
 
-from . import common, out
+from . import common
 
 
 class ListVersionsCommand(PipDownloadCommand):
@@ -101,22 +101,12 @@ def _input_to_download_args(resconfig, destdir=None) -> List[str]:
     return args
 
 
-def get_pypi_repository(resconfig) -> str:
-    if 'name' in resconfig['source']['repository']:
-        return resconfig['source']['repository']['name']
-    elif resconfig['source']['test']:
-        return 'pypitest'
-    return 'pypi'
-
-
 def get_pypi_url(input, mode='in', kind='repository') -> Tuple[str, str]:
     repocfg = input['source']['repository']
 
     key = '%s_url' % (kind,)
     if key in repocfg:
         url = repocfg[key]
-    elif input['source']['test']:
-        url = 'https://testpypi.python.org/pypi'
     else:
         url = 'https://pypi.python.org/pypi'
     
@@ -144,30 +134,25 @@ def get_pypi_url(input, mode='in', kind='repository') -> Tuple[str, str]:
     return url, hostname
 
 
-def get_versions_from_pip(resconfig) -> List[Version]:
+def pip_get_versions(resconfig) -> List[Version]:
     args = _input_to_download_args(resconfig)
 
     with redirect_stdout(sys.stderr):
         cmd = ListVersionsCommand()
         rc = cmd.main(args)
+        # pip 10.0.1 returns 0 even on connection problems, which get output to stderr
+        # but cannot be distinguised using a different return value
         if rc == 0:
             candidates = cmd.candidates
         else:
             common.msg("List Versions returned {}", rc)
             candidates = []
 
-    # https://www.python.org/dev/peps/pep-0440
-    if not resconfig['source']['pre_release']:
-        candidates = filter(lambda x: not (x.version.is_prerelease or x.version.is_devrelease), candidates)
-    if not resconfig['source']['release']:
-        candidates = filter(lambda x: (x.version.is_prerelease or x.version.is_devrelease), candidates)
-
     if resconfig['source'].get('filename_match', None):
         matchstr = resconfig['source']['filename_match']
         candidates = filter(lambda x: matchstr in x.location.filename, candidates)
 
     versions = {x.version for x in candidates}
-    versions = list(sorted(versions))
     return versions
 
 
@@ -177,13 +162,14 @@ def pip_download(resconfig, destdir) -> str:
     with redirect_stdout(sys.stderr):
         cmd = PipDownloadCommand()
         result = cmd.main(args)
-        
+    
     if result == 0:
         destfiles = os.listdir(destdir)
         assert len(destfiles) == 1
+
         version = resconfig['version']['version']
         if not version:
-            version = out.get_package_version(destfiles[0])
+            version = common.get_package_version(destfiles[0])
             common.msg("downloaded a latest version which identified as {}", version)
             
         return str(version)
