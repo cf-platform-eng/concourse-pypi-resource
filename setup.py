@@ -17,18 +17,20 @@
 from setuptools import setup
 from distutils.version import LooseVersion
 import os
-import sys
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 def read_readme():
     with open(os.path.join(here, 'README.md')) as f:
         return f.read()
 
+
 def read_version():
     with open(os.path.join(here, '.version')) as f:
         version = f.read()
     return str(LooseVersion(version))
+
 
 setup(
     name = "concourse-pypi-resource",
@@ -49,14 +51,14 @@ setup(
     keywords = [
         'concourse',
     ],
-    packages = [ 'pypi_resource', 'test' ],
+    packages = ['pypi_resource', 'test'],
     install_requires = [
         'pkginfo',
         'twine',
         'pip==10.0.1',
     ],
-    setup_requires=[ 'pytest-runner' ],
-    tests_require = [ 'pytest', ],
+    setup_requires = [],
+    tests_require = ['pytest'],
     test_suite = 'test',
     include_package_data = True,
     entry_points = {
