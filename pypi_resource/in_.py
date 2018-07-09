@@ -28,6 +28,11 @@ def in_(destdir, instream):
     version = pipio.pip_download(resconfig, destdir)
     with open(os.path.join(destdir, 'version'), 'w') as file:
         file.write(version)
+    
+    semver = common.py_version_to_semver(version)
+    if semver:
+        with open(os.path.join(destdir, 'semver'), 'w') as file:
+            file.write(semver)
 
     return str(version)
 

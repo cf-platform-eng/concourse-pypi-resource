@@ -32,12 +32,44 @@ def is_deprecated_python_version(python_version: str) -> bool:
     return False
 
 
+def py_version_to_semver(version: pipio.Version) -> str:
+    try:
+        if isinstance(version, pipio.Version):
+            v = version
+        else:
+            v = pipio.Version(str(version))
+        
+        result = '.'.join([str(x) for x in v.release])
+        if len(v.release) < 3:
+            result += '.' + '.'.join((3 - len(v.release)) * ['0', ])
+
+        if v.pre:
+            letter, pre = v.pre
+            if letter == 'a':
+                letter = 'alpha'
+            elif letter == 'b':
+                letter = 'beta'
+            result += '-{}.{}'.format(letter, pre)
+
+        if v.post:
+            msg("Post-release counter {} in '{}' is not supported by semver and will be ignored", v.post, version)
+        if v.dev:
+            result += '+dev{:06d}'.format(v.dev)
+
+    except pipio.InvalidVersion as ex:
+        msg("Failed to convert Python version '{}' to semver format", version)
+        result = None
+
+    return result
+
+
 def check_source(resconfig):
     keys = set(resconfig['source'].keys())
     deprecated_keys = {
         'username',
         'password',
         'repository_url',
+        'test',
     }
     available_keys = {
         'name',
@@ -51,13 +83,25 @@ def check_source(resconfig):
     
     delta = keys.difference(available_keys, deprecated_keys)
     if delta:
-        msg("UNKNOWN keys within source: {}", delta)
+        raise KeyError("UNKNOWN keys within source: {}".format(delta))
 
     delta = keys.intersection(deprecated_keys)
     if delta:
         msg("DEPRECATED but still accepted keys within source: {}", delta)
     
-    return True
+    if isinstance(resconfig['source'].get('repository', None), dict):
+        keys = set(resconfig['source']['repository'].keys())
+        available_keys = {
+            'authenticate',
+            'username',
+            'password',
+            'index_url',
+            'repository_url',
+            'test',
+        }
+        delta = keys.difference(available_keys)
+        if delta:
+            raise KeyError("UNKNOWN keys within source.repository: {}".format(delta))
 
 
 def merge_defaults(resconfig):
@@ -93,16 +137,16 @@ def merge_defaults(resconfig):
     #
     repository = source.setdefault('repository', dict())
     if not isinstance(repository, dict):
-        raise ValueError('ERROR: Repository names are deprecated.')
+        raise ValueError('ERROR: source.repository must be a dictionary (using names is deprecated).')
     repository.setdefault('authenticate', 'out')
     assert repository['authenticate'] in ['out', 'always']
 
     # move deprecated values from source to source.repository
-    for key in ['username', 'password', 'repository_url']:
+    for key in ['username', 'password', 'repository_url', 'test']:
         if key in source:
             repository[key] = source.pop(key)
 
-    if source.get('test', False):
+    if repository.get('test', False):
         repository['repository_url'] = 'https://testpypi.python.org/pypi'
         repository['index_url'] = 'https://testpypi.python.org/pypi'
 

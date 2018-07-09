@@ -140,5 +140,22 @@ class TestCheck(unittest.TestCase):
         self.assertEqual(result, [{'version': '0.9.2'}, {'version': '0.9.3rc1'}])
 
 
+class TestOther(unittest.TestCase):
+    def test_py_version_to_semver(self):
+        tests = [
+            ('1.2.3rc7dev11', '1.2.3-rc.7+dev000011'),
+            ('1.2.3rc7', '1.2.3-rc.7'),
+            ('1.2.3alpha', '1.2.3-alpha.0'),
+            ('1.2.3beta', '1.2.3-beta.0'),
+            ('1.2.3', '1.2.3'),
+            ('1.2.3-1', '1.2.3'),
+            ('1.2', '1.2.0'),
+            ('1', '1.0.0'),
+        ]
+        for pyver, expected in tests:
+            result = common.py_version_to_semver(pyver)
+            self.assertEqual(result, expected, "%s did not convert to %s" % (pyver, expected))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -18,7 +18,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from pip._internal.commands import DownloadCommand as PipDownloadCommand
 from pip._internal.req import RequirementSet
-from pip._vendor.packaging.version import Version
+from pip._vendor.packaging.version import Version, InvalidVersion
 
 from . import common
 
