@@ -26,7 +26,7 @@ from . import common, pipio
 def find_package(pattern, srcdir):
     files = glob.glob(os.path.join(srcdir, pattern))
     common.msg('Glob {} matched files: {}', pattern, files)
-    files = sorted(files, key=common.get_package_version)
+    files = sorted(files, key=lambda x: common.get_package_info(x)['version'])
     return files[-1]
 
 
@@ -37,10 +37,16 @@ def upload_package(pkgpath, input):
     url, unused_hostname = pipio.get_pypi_url(input, 'out') 
     twine_cmd.extend(['--repository-url', url])
 
-    twine_cmd.append('--username')
-    twine_cmd.append(repocfg.get('username', os.getenv('TWINE_USERNAME')))
-    twine_cmd.append('--password')
-    twine_cmd.append(repocfg.get('password', os.getenv('TWINE_PASSWORD')))
+    username = repocfg.get('username', os.getenv('TWINE_USERNAME'))
+    password = repocfg.get('password', os.getenv('TWINE_PASSWORD'))
+    if username and password:
+        twine_cmd.append('--username')
+        twine_cmd.append(username)
+        twine_cmd.append('--password')
+        twine_cmd.append(password)
+    else:
+        raise KeyError("username and password required to upload")
+
     twine_cmd.append(pkgpath)
 
     subprocess.run(twine_cmd, stdout=sys.stderr.fileno(), check=True)
@@ -48,12 +54,15 @@ def upload_package(pkgpath, input):
 
 def out(srcdir, input):
     common.merge_defaults(input)
+
     common.msg('Finding package to upload')
     pkgpath = find_package(input['params']['glob'], srcdir)
-    version = common.get_package_version(pkgpath)
-    common.msg('Uploading {} version {}', pkgpath, version)
+    response = common.get_package_info(pkgpath)
+
+    common.msg('Uploading {} version {}', pkgpath, response['version'])
     upload_package(pkgpath, input)
-    return {'version': {'version': str(version)}}
+
+    return {'version': response['version']}
 
 
 def main():
