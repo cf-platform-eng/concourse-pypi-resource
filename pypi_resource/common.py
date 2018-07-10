@@ -14,7 +14,7 @@
 
 import re
 import sys
-from distutils.version import LooseVersion
+from typing import Dict, List
 
 import pkginfo
 
@@ -25,7 +25,15 @@ def msg(msg, *args, **kwargs):
     print(msg.format(*args, **kwargs), file=sys.stderr)
 
 
-def is_deprecated_python_version(python_version: str) -> bool:
+def metadata_dict_to_kvlist(metadata: dict) -> List[Dict]:
+    result = []
+    for k, v in metadata.items():
+        if v:
+            result.append({'name': k, 'value': v})
+    return result
+
+
+def is_deprecated_python_version_parameter(python_version: str) -> bool:
     if python_version:
         match = re.fullmatch(r'\d+(\.\d+){0,2}', python_version)
         return not match
@@ -56,7 +64,7 @@ def py_version_to_semver(version: pipio.Version) -> str:
         if v.dev:
             result += '+dev{:06d}'.format(v.dev)
 
-    except pipio.InvalidVersion as ex:
+    except pipio.InvalidVersion:
         msg("Failed to convert Python version '{}' to semver format", version)
         result = None
 
@@ -76,6 +84,8 @@ def check_source(resconfig):
         'repository',
         'filename_match',
         'packaging',
+        'platform',
+        'python_version',
         'pre_release',
         'release',
         'test',
@@ -119,7 +129,7 @@ def merge_defaults(resconfig):
     # Mapping of python_version for concourse_pypi_resource <= 0.2.0
     # Python_version is now expected to by the version of the python interpreter.
     python_version = source.get('python_version', None)
-    if is_deprecated_python_version(python_version):
+    if is_deprecated_python_version_parameter(python_version):
         msg('WARNING: The <python_version> property value format is deprecated: "{}". ' +
             'Only python version numbers will be accepted in the future.', python_version)
         source.pop('python_version')
@@ -147,8 +157,11 @@ def merge_defaults(resconfig):
             repository[key] = source.pop(key)
 
     if repository.get('test', False):
-        repository['repository_url'] = 'https://testpypi.python.org/pypi'
-        repository['index_url'] = 'https://testpypi.python.org/pypi'
+        repository['repository_url'] = 'https://test.pypi.org/legacy/'
+        repository['index_url'] = 'https://testpypi.python.org/simple'
+
+    repository.setdefault('repository_url', 'https://upload.pypi.org/legacy/')
+    repository.setdefault('index_url', 'https://pypi.python.org/simple')
 
     #
     # setup version
@@ -162,6 +175,17 @@ def merge_defaults(resconfig):
     return resconfig
 
 
-def get_package_version(pkgpath):
-    metadata = pkginfo.get_metadata(pkgpath)
-    return LooseVersion(metadata.version)
+def get_package_info(pkgpath):
+    """ Provide a subset of the package metadata to merge into the Concourse resource metadata. """
+    pkgmeta = pkginfo.get_metadata(pkgpath)
+    result = {
+        'version': pkgmeta.version,
+        'metadata': {
+            'package_name': pkgmeta.name,
+            'summary': pkgmeta.summary,
+            'home_page': pkgmeta.home_page,
+            'platforms': ', '.join(pkgmeta.platforms),
+            'requires_python': pkgmeta.requires_python,
+        }
+    }
+    return result

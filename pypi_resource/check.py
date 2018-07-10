@@ -36,18 +36,13 @@ def check(instream):
     resconfig = json.load(instream)
     resconfig = common.merge_defaults(resconfig)
 
-    versions = pipio.pip_get_versions(resconfig)
+    package_info = pipio.pip_get_versions(resconfig)
 
-    if not resconfig['source']['pre_release']:
-        versions = filter(lambda x: not (x.is_prerelease or x.is_devrelease), versions)
-    if not resconfig['source']['release']:
-        versions = filter(lambda x: (x.is_prerelease or x.is_devrelease), versions)
-
-    versions = list(sorted(versions))
+    versions = list(sorted(package_info.keys()))
     common.msg("{}", versions)
-
     versions = truncate_smaller_versions(versions, resconfig['version']['version'])
 
+    # NOTE: check only takes versions, no metadata
     return [{'version': str(version)} for version in versions]
 
 

@@ -15,16 +15,14 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import Mock
-from .unittests import make_input_nexus3
-import json
 import os
 import subprocess
 
-from pypi_resource import out, pypi
+from pypi_resource import common, out, pipio
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 REPODIR = os.path.join(THISDIR, '..')
+
 
 class TestPut(unittest.TestCase):
 
@@ -34,23 +32,24 @@ class TestPut(unittest.TestCase):
         out.out(
             os.path.join(REPODIR, 'dist'),
             {
-                'source': { 'test': True },
-                'params': { 'glob': '*.tar.gz' }
+                'source': {'test': True},
+                'params': {'glob': '*.tar.gz'}
             }
-        )     
+        )
 
 
 class TestPip(unittest.TestCase):
 
     def test_search_public(self):
-        input = {
+        resconfig = {
             'source': {
                 'name': 'numpy',
                 'test': False,
             },
-            'version': '',
+            'version': None,
         }
-        versions = pypi.get_package_versions(input)
+        resconfig = common.merge_defaults(resconfig)
+        versions = pipio.pip_get_versions(resconfig)
         self.assertGreater(len(versions), 5)
 
 

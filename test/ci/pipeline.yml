@@ -6,6 +6,13 @@ resource_types:
     tag: ((pypi_resource_tag))
 
 resources:
+- name: numpy_latest
+  type: pypi
+  source:
+    name: numpy
+    packaging: binary
+    platform: win32
+
 - name: source_package_latest
   type: pypi
   source:
@@ -88,3 +95,7 @@ jobs:
   plan:
   - get: pre_release_latest
     version: {version: 1.0.1rc1}
+
+- name: get-latest-version
+  plan:
+  - get: numpy_latest

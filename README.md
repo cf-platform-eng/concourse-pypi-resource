@@ -15,7 +15,7 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/punkadid
 |`release`                   |`true`  |optional | check release versions
 |`filename_match`            |-/-     |optional | only include packages containing this string (e.g. `py2.py3`, `.whl`)
 |`packaging`                 |`any`   |optional | only include `source` or `binary` (or `any`) packages
-|`platform`                  |-/-     |optional | TODO
+|`platform`                  |-/-     |optional | only include releases compatible with this platform (implicit default will be the os used for Concourse's workers)
 |`python_abi`                |-/-     |optional | TODO
 |`python_implementation`     |-/-     |optional | TODO
 |`python_version`            |-/-     |optional | only include packages compatible with this Python interpreter version number (see [pip's `--python-version`]((https://pip.pypa.io/en/stable/reference/pip_download/#options)))
@@ -108,6 +108,14 @@ To build the docker image for the resource:
 make dist
 # optionally upload
 make push
+```
+
+Run local test runs like this:
+```sh
+# check
+docker run -i concourse-pypi-resource:latest-rc check < test/input/check-nexus.json | jq
+# in
+docker run --rm -i --volume destdir concourse-pypi-resource:latest-rc in destdir < test/input/in-nexus.json | jq
 ```
 
 ### Private repository integration tests (using Sonatype Nexus 3)

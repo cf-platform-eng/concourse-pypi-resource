@@ -19,7 +19,7 @@ import shutil
 import tempfile
 import unittest
 
-from pypi_resource import common, pipio
+from pypi_resource import common, in_, pipio, out
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 REPODIR = os.path.join(THISDIR, '..')
@@ -56,34 +56,21 @@ def make_input(version, **kwargs):
     return resconfig
 
 
-# class TestPut(unittest.TestCase):
-# 
-#     def test_nexus3(self):
-#         rc = subprocess.run(['pipenv', 'run', 'python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
-#         print("sdist returned", rc)
-#         out.out(
-#             os.path.join(REPODIR, 'dist'),
-#             {
-#                 'source': make_input(None)['source'],
-#                 'params': {'glob': '*.tar.gz'}
-#             }
-#         )
-
-
 class TestCheck(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         super(TestCheck, cls).setUpClass()
+
         # upload the test-set
-#         src = os.path.join(THISDIR, 'test_dist')
-#         for fn in os.listdir(src):
-#             out.out(src,
-#                     {
-#                         'source': make_input(None)['source'],
-#                         'params': {'glob': fn}
-#                     }
-#             )         
+        src = os.path.join(THISDIR, 'test_dist')
+        for fn in os.listdir(src):
+            out.out(src,
+                    {
+                        'source': make_input(None)['source'],
+                        'params': {'glob': fn}
+                    }
+            )
 
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
@@ -94,13 +81,14 @@ class TestCheck(unittest.TestCase):
     def get_versions(self, **kwargs):
         resconfig = make_input(None, **kwargs)
         resconfig = common.merge_defaults(resconfig)
-        versions = pipio.pip_get_versions(resconfig)
+        pkg_artefacts = pipio.pip_get_versions(resconfig)
+        versions = list(sorted(pkg_artefacts.keys()))
         return versions
     
     def get_download(self, **kwargs):
         resconfig = make_input(None, **kwargs)
         resconfig = common.merge_defaults(resconfig)
-        return pipio.pip_download(resconfig, self.temp_dir)
+        return in_.download_version(resconfig, self.temp_dir)
 
     def test_search_nexus3_filename_filter(self):
         versions = self.get_versions(
@@ -121,7 +109,7 @@ class TestCheck(unittest.TestCase):
             name='test_package1',
             pre_release=False,
         )
-        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])                
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])
 
     def test_download_latest(self):
         result = self.get_download(

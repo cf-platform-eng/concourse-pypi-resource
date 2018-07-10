@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import io
 import json
 import os
 import sys
-
+import unittest
 from unittest.mock import patch
+
+from pip._internal.index import InstallationCandidate, Link
 
 from pypi_resource import check, common, pipio
 
-
 here = os.path.dirname(os.path.realpath(__file__))
-canned_versions = list(map(pipio.Version, ["0.9.3rc1", "0.9.1", "0.9.2"]))
+canned_versions = ["0.9.3rc1", "0.9.1", "0.9.2"]
 
 
 def make_stream(json_obj):
@@ -61,7 +61,7 @@ class TestConfiguration(unittest.TestCase):
         resconfig = {'source': {'username': 'u', 'password': 'p', 'repository_url': 'url'}}
         result = common.merge_defaults(resconfig)
 
-        self.assertDictEqual(expected['source']['repository'], result['source']['repository'])
+        self.assertDictContainsSubset(expected['source']['repository'], result['source']['repository'])
 
 
 class TestPypi(unittest.TestCase):
@@ -109,31 +109,40 @@ class TestPypi(unittest.TestCase):
 
 
 class TestCheck(unittest.TestCase):
+    def setUp(self):
+        candidates = []
+        for version in canned_versions:
+            url = "https://foo:12345/repository/unittest-{}.tgz#md5=4711".format(version)
+            url = Link(url)
+            candidate = InstallationCandidate('unittest', version, url)
+            candidates.append(candidate)
+        self.canned_candidates = candidates
+
     def test_truncate_before(self):
         self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 1), [1, 2, 3])
         self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 2), [2, 3])
         self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 3), [3])
         self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 4), [3])
 
-    @patch('pypi_resource.pipio.pip_get_versions')
+    @patch('pypi_resource.pipio._pip_query_candidates')
     def test_newest_version(self, mock_info):
-        mock_info.return_value = canned_versions
+        mock_info.return_value = self.canned_candidates
         version = {'version': '0.9.2'}
         instream = make_input_stream(version)
         result = check.check(instream)
         self.assertEqual(result, [version])
 
-    @patch('pypi_resource.pipio.pip_get_versions')
+    @patch('pypi_resource.pipio._pip_query_candidates')
     def test_has_newer_version(self, mock_info):
-        mock_info.return_value = canned_versions
+        mock_info.return_value = self.canned_candidates
         version = {'version': '0.9.1'}
         instream = make_input_stream(version)
         result = check.check(instream)
         self.assertEqual(result, [{'version': '0.9.1'}, {'version': '0.9.2'}])
 
-    @patch('pypi_resource.pipio.pip_get_versions')
+    @patch('pypi_resource.pipio._pip_query_candidates')
     def test_has_newer_prerelease(self, mock_info):
-        mock_info.return_value = canned_versions
+        mock_info.return_value = self.canned_candidates
         version = {'version': '0.9.2'}
         instream = make_input_stream(version, pre_release=True)
         result = check.check(instream)

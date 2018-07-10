@@ -13,4 +13,4 @@ pypi_upload:
   password: admin123
   
 pypi_resource_image: punkadiddle/concourse-pypi-resource
-pypi_resource_tag: 0.3.0-rc.27
+pypi_resource_tag: 0.3.0-rc.48
