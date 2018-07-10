@@ -46,22 +46,25 @@ resources:
   type: pypi
   source:
     name: my_package
-    username: user
-    password: pass
     packaging: any
+    repository:
+      username: user
+      password: pass
 
 - name: my-private-package
   type: pypi
   source:
     name: my_package
     pre_release: true
+    # In a live pipeline you would probably set the while repository configuration
+    # through a single yaml parameter:
+    # repository: ((my-private-repository))
     repository:
       authenticate: always
       index_url: http://nexus.local:8081/repository/pypi-private/simple
       repository_url: http://nexus.local:8081/repository/pypi-private/
       username: admin
       password: admin123
-
 ```
 
 ## `get`: Download the latest version
