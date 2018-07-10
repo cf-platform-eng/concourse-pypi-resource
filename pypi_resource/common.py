@@ -158,10 +158,10 @@ def merge_defaults(resconfig):
 
     if repository.get('test', False):
         repository['repository_url'] = 'https://test.pypi.org/legacy/'
-        repository['index_url'] = 'https://testpypi.python.org/simple'
+        repository['index_url'] = 'https://test.pypi.org/simple'
 
     repository.setdefault('repository_url', 'https://upload.pypi.org/legacy/')
-    repository.setdefault('index_url', 'https://pypi.python.org/simple')
+    repository.setdefault('index_url', 'https://pypi.org/simple')
 
     #
     # setup version
