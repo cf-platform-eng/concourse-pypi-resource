@@ -58,11 +58,12 @@ def out(srcdir, input):
     common.msg('Finding package to upload')
     pkgpath = find_package(input['params']['glob'], srcdir)
     response = common.get_package_info(pkgpath)
+    version = str(response['version'])
 
-    common.msg('Uploading {} version {}', pkgpath, response['version'])
+    common.msg('Uploading {} version {}', pkgpath, version)
     upload_package(pkgpath, input)
 
-    return {'version': response['version']}
+    return {'version': {'version': version}}
 
 
 def main():
