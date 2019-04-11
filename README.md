@@ -22,7 +22,7 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/punkadid
 |__REPOSITORY__
 |`repository.test`           |`false` |optional | set to `true` as shortcut to use the [PyPI test server](https://testpypi.python.org/pypi) for `index_url` and `repository_url`
 |`repository.index_url`      |[PyPi](https://pypi.python.org/pypi)|optional         | url to a pip compatible index for check and download
-|`repository.repository_url` |[PyPi](https://pypi.python.org/pypi)|optional         | url to a twine compatible repository for ulpad
+|`repository.repository_url` |[PyPi](https://pypi.python.org/pypi)|optional         | url to a twine compatible repository for upload
 |`repository.username`       |-/-     |req. for uploads | username for PyPI server authentication
 |`repository.password`       |-/-     |req. for uploads | password for PyPI server authentication
 |`repository.authenticate`   |out     |optional         | set to `always` to authenticate to a private repository for check and download also
