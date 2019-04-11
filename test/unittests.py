@@ -84,12 +84,12 @@ class TestPypi(unittest.TestCase):
 
         input = {'source': {'repository': {'authenticate': 'always', 'username': 'u', 'password': 'p'}}}
         input = common.merge_defaults(input)
-        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://u:p@pypi.python.org/pypi', 'pypi.python.org'))
+        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://u:p@upload.pypi.org/legacy/', 'upload.pypi.org'))
 
         input = {'source': {'repository': {'username': 'u', 'password': 'p'}}}
         input = common.merge_defaults(input)
-        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://pypi.python.org/pypi', 'pypi.python.org'))
-        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('https://u:p@pypi.python.org/pypi', 'pypi.python.org'))
+        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://upload.pypi.org/legacy/', 'upload.pypi.org'))
+        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('https://u:p@upload.pypi.org/legacy/', 'upload.pypi.org'))
 
         input = {'source': {'repository': {
                             'username': 'admin', 'password': 'admin123', 'authenticate': 'always', 
@@ -101,11 +101,11 @@ class TestPypi(unittest.TestCase):
     def test_pypi_test_url(self):
         input = {'source': {'test': True}}
         input = common.merge_defaults(input)
-        self.assertEqual(pipio.get_pypi_url(input), ('https://testpypi.python.org/pypi', 'testpypi.python.org'))
+        self.assertEqual(pipio.get_pypi_url(input), ('https://test.pypi.org/legacy/', 'test.pypi.org'))
 
         input = {'source': {'test': False}}
         input = common.merge_defaults(input)
-        self.assertEqual(pipio.get_pypi_url(input), ('https://pypi.python.org/pypi', 'pypi.python.org'))
+        self.assertEqual(pipio.get_pypi_url(input), ('https://upload.pypi.org/legacy/', 'upload.pypi.org'))
 
 
 class TestCheck(unittest.TestCase):

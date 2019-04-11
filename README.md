@@ -1,5 +1,5 @@
 # PyPI Package Resource
-A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.python.org/pypi) packages. This is an enhanced fork of [cf-platform-eng/concourse-pypi-resource](https://github.com/cf-platform-eng/concourse-pypi-resource), that adds compatibility to most PyPI repository types and extended package selection parameters.
+A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.org) packages. This is an enhanced fork of [cf-platform-eng/concourse-pypi-resource](https://github.com/cf-platform-eng/concourse-pypi-resource), that adds compatibility to most PyPI repository types and extended package selection parameters.
 
 It can be used to check/download existing packages and to manages your own builds as well. Internally it uses [Pip 10.0.1](https://pip.pypa.io/en/stable/reference/pip_download/#options) for *check* and *in* (downloads) and [twine] for *out*put.
 
@@ -20,9 +20,9 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/punkadid
 |`python_implementation`     |-/-     |optional | TODO
 |`python_version`            |-/-     |optional | only include packages compatible with this Python interpreter version number (see [pip's `--python-version`]((https://pip.pypa.io/en/stable/reference/pip_download/#options)))
 |__REPOSITORY__
-|`repository.test`           |`false` |optional | set to `true` as shortcut to use the [PyPI test server](https://testpypi.python.org/pypi) for `index_url` and `repository_url`
-|`repository.index_url`      |[PyPI](https://pypi.python.org/pypi)|optional         | url to a pip compatible index for check and download
-|`repository.repository_url` |[PyPI](https://pypi.python.org/pypi)|optional         | url to a twine compatible repository for upload
+|`repository.test`           |`false` |optional | set to `true` as shortcut to use the [PyPI test server](https://test.pypi.org/) for `index_url` and `repository_url`
+|`repository.index_url`      |[PyPI](https://pypi.org/simple)|optional         | url to a pip compatible index for check and download
+|`repository.repository_url` |[PyPI](https://upload.pypi.org/legacy)|optional         | url to a twine compatible repository for upload
 |`repository.username`       |-/-     |req. for uploads | username for PyPI server authentication
 |`repository.password`       |-/-     |req. for uploads | password for PyPI server authentication
 |`repository.authenticate`   |out     |optional         | set to `always` to authenticate to a private repository for check and download also
