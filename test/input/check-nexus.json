@@ -1,0 +1,13 @@
+{
+        "source": {
+            "name": "test_package1",
+            "username": "admin",
+            "password": "admin123",
+            "repository": {
+                "authenticate": "always",
+                "index_url": "http://192.168.1.106:8081/repository/pypi-private/simple",
+                "repository_url": "http://192.168.1.106:8081/repository/pypi-private/"
+            },
+            "pre_release": true
+        }
+}

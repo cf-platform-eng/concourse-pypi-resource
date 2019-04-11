@@ -15,31 +15,43 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import Mock
-import json
 import os
 import subprocess
 
-from pypi_resource import *
+from pypi_resource import common, out, pipio
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 REPODIR = os.path.join(THISDIR, '..')
 
+
 class TestPut(unittest.TestCase):
 
-    def test_out(self):
-        subprocess.check_call(['python', 'setup.py', 'sdist'], cwd=REPODIR)
+    def test_upload_pypi(self):
+        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
+        print("sdist returned", rc)
         out.out(
             os.path.join(REPODIR, 'dist'),
             {
-                'source': {
-                    'test': True,
-                },
-                'params': {
-                    'glob': '*.tar.gz',
-                }
+                'source': {'test': True},
+                'params': {'glob': '*.tar.gz'}
             }
         )
+
+
+class TestPip(unittest.TestCase):
+
+    def test_search_public(self):
+        resconfig = {
+            'source': {
+                'name': 'numpy',
+                'test': False,
+            },
+            'version': None,
+        }
+        resconfig = common.merge_defaults(resconfig)
+        versions = pipio.pip_get_versions(resconfig)
+        self.assertGreater(len(versions), 5)
+
 
 if __name__ == '__main__':
     unittest.main()

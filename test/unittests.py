@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-from unittest.mock import patch
-from pypi_resource import *
-from distutils.version import LooseVersion
 import io
 import json
 import os
 import sys
+import unittest
+from unittest.mock import patch
 
-def read_file(file):
-    with open(file) as f:
-        return f.read()
+from pip._internal.index import InstallationCandidate, Link
+
+from pypi_resource import check, common, pipio
 
 here = os.path.dirname(os.path.realpath(__file__))
-canned_pypi_info = json.loads(read_file(os.path.join(here, 'pypi-package-info.json')))
+canned_versions = ["0.9.3rc1", "0.9.1", "0.9.2"]
+
 
 def make_stream(json_obj):
     stream = io.StringIO()
@@ -34,19 +33,36 @@ def make_stream(json_obj):
     stream.seek(0)
     return stream
 
-def make_input(version):
-    return {
+
+def make_input(version, **kwargs):
+    resconfig = {
         'source': {
             'name': 'tile-generator',
-            'username': 'username',
-            'password': 'password',
             'test': False,
         },
         'version': version,
     }
+    resconfig['source'].update(kwargs)
+    return resconfig
 
-def make_input_stream(version):
-    return make_stream(make_input(version))
+
+def make_input_stream(version, **kwargs):
+    return make_stream(make_input(version, **kwargs))
+
+
+class TestConfiguration(unittest.TestCase):
+    def test_repository_name_deprecated(self):
+        resconfig = {'source': {'repository': 'foo'}}
+        with self.assertRaises(ValueError):
+            common.merge_defaults(resconfig)
+
+    def test_repository_props_migrated(self):
+        expected = {'source': {'repository': {'authenticate': 'out', 'username': 'u', 'password': 'p', 'repository_url': 'url'}}}
+        resconfig = {'source': {'username': 'u', 'password': 'p', 'repository_url': 'url'}}
+        result = common.merge_defaults(resconfig)
+
+        self.assertDictContainsSubset(expected['source']['repository'], result['source']['repository'])
+
 
 class TestPypi(unittest.TestCase):
     def setUp(self):
@@ -54,80 +70,101 @@ class TestPypi(unittest.TestCase):
         sys.stdout = newout
 
     def tearDown(self):
-        self.assertEqual(sys.stdout.getvalue(), '', '%s sent text to stdout and this is not allowed' % self._testMethodName)
+        self.assertEqual(sys.stdout.getvalue(), '',
+                         '%s sent text to stdout and this is not allowed' % self._testMethodName)
 
     def test_pypi_url(self):
-        input = {'source': { 'repository_url': 'http://example.org/pypi' } }
-        self.assertEqual(pypi.get_pypi_url(input), 'http://example.org/pypi')
-        input = {'source': { 'test': True } }
-        self.assertEqual(pypi.get_pypi_url(input), 'https://testpypi.python.org/pypi')
-        input = {'source': { 'test': False } }
-        self.assertEqual(pypi.get_pypi_url(input), 'https://pypi.python.org/pypi')
+        input = {'source': {'repository_url': 'http://example.org/pypi'}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('http://example.org/pypi', 'example.org'))
 
-    def test_pypi_repo(self):
-        input = {'source': { 'repository': "example_repo" } }
-        self.assertEqual(pypi.get_pypi_repository(input), 'example_repo')
-        input = {'source': { 'test': True } }
-        self.assertEqual(pypi.get_pypi_repository(input), 'pypitest')
-        input = {'source': { 'test': False } }
-        self.assertEqual(pypi.get_pypi_repository(input), 'pypi')
+        input = {'source': {'repository': {'repository_url': 'http://example.org/pypi'}}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('http://example.org/pypi', 'example.org'))
 
-    @patch('pypi_resource.pypi.get_pypi_package_info')
-    def test_get_versions_from_pypi(self, mock_info):
-        mock_info.return_value = canned_pypi_info
-        input = make_input('0.9.2')
-        result = pypi.get_versions_from_pypi(input)
-        self.assertEqual(list(result), ['0.9.1', '0.9.2'])
+        input = {'source': {'repository': {'authenticate': 'always', 'username': 'u', 'password': 'p'}}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://u:p@upload.pypi.org/legacy/', 'upload.pypi.org'))
 
-    @patch('pypi_resource.pypi.get_pypi_package_info')
-    def test_get_version_url(self, mock_info):
-        mock_info.return_value = canned_pypi_info
-        version = '0.9.1'
-        input = make_input(version)
-        result = pypi.get_pypi_version_url(input, version)
-        self.assertEqual(result, 'https://testpypi.python.org/packages/d6/7f/adacf6e8b1078f0338d71782911ea2f8822d89d2cb816688b5363e34bc09/tile_generator-0.9.1.tar.gz')
+        input = {'source': {'repository': {'username': 'u', 'password': 'p'}}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://upload.pypi.org/legacy/', 'upload.pypi.org'))
+        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('https://u:p@upload.pypi.org/legacy/', 'upload.pypi.org'))
+
+        input = {'source': {'repository': {
+                            'username': 'admin', 'password': 'admin123', 'authenticate': 'always', 
+                            'repository_url': 'http://localhost:8081/repository/pypi-private/'
+        }}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('http://admin:admin123@localhost:8081/repository/pypi-private/', 'localhost'))
+
+    def test_pypi_test_url(self):
+        input = {'source': {'test': True}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('https://test.pypi.org/legacy/', 'test.pypi.org'))
+
+        input = {'source': {'test': False}}
+        input = common.merge_defaults(input)
+        self.assertEqual(pipio.get_pypi_url(input), ('https://upload.pypi.org/legacy/', 'upload.pypi.org'))
+
 
 class TestCheck(unittest.TestCase):
-    def test_truncate_before(self):
-        self.assertEqual(check.truncate_before([1, 2, 3], 1), [1, 2, 3])
-        self.assertEqual(check.truncate_before([1, 2, 3], 2), [2, 3])
-        self.assertEqual(check.truncate_before([1, 2, 3], 3), [3])
-        self.assertEqual(check.truncate_before([1, 2, 3], 4), [3])
+    def setUp(self):
+        candidates = []
+        for version in canned_versions:
+            url = "https://foo:12345/repository/unittest-{}.tgz#md5=4711".format(version)
+            url = Link(url)
+            candidate = InstallationCandidate('unittest', version, url)
+            candidates.append(candidate)
+        self.canned_candidates = candidates
 
-    @patch('pypi_resource.pypi.get_pypi_package_info')
+    def test_truncate_before(self):
+        self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 1), [1, 2, 3])
+        self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 2), [2, 3])
+        self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 3), [3])
+        self.assertEqual(check.truncate_smaller_versions([1, 2, 3], 4), [3])
+
+    @patch('pypi_resource.pipio._pip_query_candidates')
     def test_newest_version(self, mock_info):
-        mock_info.return_value = canned_pypi_info
-        version = {'version': {'version': '0.9.2'}}
+        mock_info.return_value = self.canned_candidates
+        version = {'version': '0.9.2'}
         instream = make_input_stream(version)
         result = check.check(instream)
-        self.assertEqual(result, [version['version']])
+        self.assertEqual(result, [version])
 
-    @patch('pypi_resource.pypi.get_pypi_package_info')
+    @patch('pypi_resource.pipio._pip_query_candidates')
     def test_has_newer_version(self, mock_info):
-        mock_info.return_value = canned_pypi_info
-        version = {'version': {'version': '0.9.1'}}
+        mock_info.return_value = self.canned_candidates
+        version = {'version': '0.9.1'}
         instream = make_input_stream(version)
         result = check.check(instream)
         self.assertEqual(result, [{'version': '0.9.1'}, {'version': '0.9.2'}])
 
-class TestIn(unittest.TestCase):
-    def test_parse_filename_from_url(self):
-        url = 'https://testpypi.python.org/packages/d6/7f/adacf6e8b1078f0338d71782911ea2f8822d89d2cb816688b5363e34bc09/tile_generator-0.9.1.tar.gz'
-        filename = 'tile_generator-0.9.1.tar.gz'
-        self.assertEqual(in_.parse_filename_from_url(url), filename)
+    @patch('pypi_resource.pipio._pip_query_candidates')
+    def test_has_newer_prerelease(self, mock_info):
+        mock_info.return_value = self.canned_candidates
+        version = {'version': '0.9.2'}
+        instream = make_input_stream(version, pre_release=True)
+        result = check.check(instream)
+        self.assertEqual(result, [{'version': '0.9.2'}, {'version': '0.9.3rc1'}])
 
-    def test_local_download_path(self):
-        url = 'https://testpypi.python.org/packages/d6/7f/adacf6e8b1078f0338d71782911ea2f8822d89d2cb816688b5363e34bc09/tile_generator-0.9.1.tar.gz'
-        filename = 'tile_generator-0.9.1.tar.gz'
-        destdir = 'output'
-        expected = os.path.join(destdir, filename)
-        self.assertEqual(in_.local_download_path(url, destdir), expected)
 
-class TestCommon(unittest.TestCase):
-    def test_is_release(self):
-        self.assertTrue(common.is_release(LooseVersion('0.9.1')))
-        self.assertFalse(common.is_release(LooseVersion('1.1.2.dev21')))
-        self.assertFalse(common.is_release(LooseVersion('1.1.2-dev.21')))
+class TestOther(unittest.TestCase):
+    def test_py_version_to_semver(self):
+        tests = [
+            ('1.2.3rc7dev11', '1.2.3-rc.7+dev000011'),
+            ('1.2.3rc7', '1.2.3-rc.7'),
+            ('1.2.3alpha', '1.2.3-alpha.0'),
+            ('1.2.3beta', '1.2.3-beta.0'),
+            ('1.2.3', '1.2.3'),
+            ('1.2.3-1', '1.2.3'),
+            ('1.2', '1.2.0'),
+            ('1', '1.0.0'),
+        ]
+        for pyver, expected in tests:
+            result = common.py_version_to_semver(pyver)
+            self.assertEqual(result, expected, "%s did not convert to %s" % (pyver, expected))
+
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

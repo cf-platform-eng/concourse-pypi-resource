@@ -1,3 +1,0 @@
-pkginfo
-requests
-twine

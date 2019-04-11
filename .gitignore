@@ -1,4 +1,47 @@
+### JetBrains template
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion
+
+*.iml
+
+## Directory-based project format:
+.idea/
+
+### Other editors
+.*.swp
+.vscode/tags
+.vscode/.*
+
+
+### Python template
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# Distribution / packaging
+.env/
+env/
+build/
 dist/
-concourse_pypi_resource.egg-info/
-.envrc
-*.pyc
+.eggs/
+lib/
+lib64/
+*.egg-info/
+.venv/
+test/test_dist/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache
+nosetests.xml
+coverage.xml
+*,cover

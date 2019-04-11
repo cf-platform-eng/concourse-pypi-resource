@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pkginfo = "*"
+twine = "*"
+pip = "==10.0.1"
+setuptools = "*"
+
+[dev-packages]
+pytest = "*"
+flake8 = "*"
+pylint = "*"
+semver = "*"

@@ -1,0 +1,76 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Debug CHECK",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/.vscode/check.py",
+            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "test/input/check-public.json"
+            ]
+        },
+        {
+            "name": "Python: Debug IN",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/in_.py",
+            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "tmp",
+                "test/input/in-public.json"
+            ]
+        },
+        {
+            "name": "Python: Debug unittests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/unittests.py",
+            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"
+            }
+        },
+        {
+            "name": "Python: Debug nexus-integration",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/nexus-integration.py",
+            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"
+            }
+        },        
+        {
+            "name": "Python: Terminal (integrated)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: All debug Options",
+            "type": "python",
+            "request": "launch",
+            "pythonPath": "${config:python.pythonPath}",
+            "program": "${file}",
+            "module": "module.name",
+            "env": {
+                "VAR1": "1",
+                "VAR2": "2"
+            },
+            "envFile": "${workspaceFolder}/.env",
+            "args": [
+                "arg1",
+                "arg2"
+            ],
+            "debugOptions": [
+                "RedirectOutput"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,101 @@
+resource_types:
+- name: pypi
+  type: docker-image
+  source:
+    repository: ((pypi_resource_image))
+    tag: ((pypi_resource_tag))
+
+resources:
+- name: numpy_latest
+  type: pypi
+  source:
+    name: numpy
+    packaging: binary
+    platform: win32
+
+- name: source_package_latest
+  type: pypi
+  source:
+    name: test_package1
+    repository: ((pypi))
+    pre_release: false
+    packaging: source
+
+- name: binary_package_latest
+  type: pypi
+  source:
+    name: test_package1
+    repository: ((pypi))
+    pre_release: false
+    packaging: binary    
+
+- name: pre_release_latest
+  type: pypi
+  source:
+    name: test_package1
+    repository: ((pypi))
+    pre_release: true
+    release: false
+
+- name: source_package_release
+  type: pypi
+  source:
+    name: test_package1
+    repository: ((pypi_upload))
+    pre_release: false
+    packaging: source
+
+- name: binary_package_release
+  type: pypi
+  source:
+    name: test_package1
+    repository: ((pypi_upload))
+    pre_release: false
+    packaging: binary   
+
+jobs:
+- name: copy-to-release
+  plan:
+  - aggregate:
+    - get: binary_package_latest
+    - get: source_package_latest
+    - get: pre_release_latest
+    
+  - task: show the numbers
+    config: 
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: python
+          tag: 3-alpine3.6
+      inputs:
+        - {name: binary_package_latest}
+        - {name: source_package_latest}
+        - {name: pre_release_latest}
+      run:
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          find . -type d | xargs ls -Al
+          echo
+          find . -mindepth 1 -type d | xargs -I{} sh -c 'echo -n "{} version: "; cat {}/version; echo -n " semver: "; cat {}/semver; echo'
+
+
+  - aggregate:
+    - put: binary_package_release
+      params:
+        glob: binary_package_latest/*.*
+    - put: source_package_release
+      params:
+        glob: source_package_latest/*.*
+
+- name: get-specific-version
+  plan:
+  - get: pre_release_latest
+    version: {version: 1.0.1rc1}
+
+- name: get-latest-version
+  plan:
+  - get: numpy_latest
