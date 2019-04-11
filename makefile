@@ -1,4 +1,4 @@
-DOCKER_PREFIX=punkadiddle
+DOCKER_PREFIX=cfplatformeng
 DOCKER_NAME=concourse-pypi-resource
 .PHONY: all clean clean_test dist testenv
 
