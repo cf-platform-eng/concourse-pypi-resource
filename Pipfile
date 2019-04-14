@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 pkginfo = "*"
 twine = "*"
-pip = "==10.0.1"
+pip = "*"
 setuptools = "*"
 
 [dev-packages]
