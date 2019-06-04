@@ -12,7 +12,6 @@ def retry_wrapper(count=3, delay_in_seconds=1):
                     tries += 1
                     common.msg("Try %d of %d to call function `%s` from module `%s`" %
                           (tries, count, function.__name__, function.__module__))
-                    common.msg("-- with arguments: %s and kwargs %s" % (args, kwargs))
                     result = function(*args, **kwargs)
                     return result
                 except Exception as e:

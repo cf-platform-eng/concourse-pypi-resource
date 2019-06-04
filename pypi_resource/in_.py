@@ -19,6 +19,7 @@ import os
 import sys
 
 from . import common, pipio
+from .retry import retry_wrapper
 
 
 def select_artefact_for_response(package_info, version: pipio.Version, artefact_index: int=0):
@@ -46,6 +47,7 @@ def select_artefact_for_response(package_info, version: pipio.Version, artefact_
     }
 
 
+@retry_wrapper(20, 3)
 def download_version(resconfig, destdir):
     # fetch all matching versions/artifacts
     package_info = pipio.pip_get_versions(resconfig)

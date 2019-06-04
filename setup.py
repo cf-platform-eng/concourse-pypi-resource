@@ -55,7 +55,7 @@ setup(
     install_requires = [
         'pkginfo',
         'twine',
-        'pip==10.0.1',
+        'pip',
     ],
     setup_requires = [],
     tests_require = ['pytest'],
