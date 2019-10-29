@@ -3,7 +3,7 @@ A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.or
 
 It can be used to check/download existing packages and to manages your own builds as well. Internally it uses [Pip 10.0.1](https://pip.pypa.io/en/stable/reference/pip_download/#options) for *check* and *in* (downloads) and [twine] for *out*put.
 
-Docker image publicly available on Docker Hub: https://hub.docker.com/r/punkadiddle/concourse-pypi-resource.
+Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatformeng/concourse-pypi-resource.
 
 ## Resource Configuration
 
@@ -39,7 +39,7 @@ resource_types:
 - name: pypi
   type: docker-image
   source:
-    repository: punkadiddle/concourse-pypi-resource
+    repository: cfplatformeng/concourse-pypi-resource
 
 resources:
 - name: my-public-package
