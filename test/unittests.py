@@ -89,7 +89,7 @@ class TestPypi(unittest.TestCase):
         input = {'source': {'repository': {'username': 'u', 'password': 'p'}}}
         input = common.merge_defaults(input)
         self.assertEqual(pipio.get_pypi_url(input, 'in'), ('https://upload.pypi.org/legacy/', 'upload.pypi.org'))
-        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('https://u:p@upload.pypi.org/legacy/', 'upload.pypi.org'))
+        self.assertEqual(pipio.get_pypi_url(input, 'out'), ('https://upload.pypi.org/legacy/', 'upload.pypi.org'))
 
         input = {'source': {'repository': {
                             'username': 'admin', 'password': 'admin123', 'authenticate': 'always', 
