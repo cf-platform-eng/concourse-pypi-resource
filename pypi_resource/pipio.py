@@ -23,6 +23,8 @@ from pip._internal.network.session import PipSession
 from pip._internal.operations.prepare import unpack_url
 from pip._internal.models.candidate import InstallationCandidate
 from pip._internal.models.link import Link
+from pip._internal.models.target_python import TargetPython
+from pip._internal.cli.status_codes import SUCCESS
 from pip._internal.req import RequirementSet
 from pip._vendor.packaging.version import Version, InvalidVersion
 
@@ -43,41 +45,33 @@ class ListVersionsCommand(PipDownloadCommand):
         options.ignore_installed = True
         options.editables = []
 
-        if options.python_version:
-            python_versions = [options.python_version]
-        else:
-            python_versions = None
-
         with self._build_session(options) as session:
             finder = self._build_package_finder(
                 options=options,
                 session=session,
-                platform=options.platform,
-                python_versions=python_versions,
-                abi=options.abi,
-                implementation=options.implementation,
+                target_python = TargetPython(
+                    platform=options.platform,
+                    py_version_info=options.python_version,
+                    abi=options.abi,
+                    implementation=options.implementation,
+                ),
             )
 
-            requirement_set = RequirementSet(
-                require_hashes=options.require_hashes,
-            )
-            self.populate_requirement_set(
-                requirement_set,
+            requirement_set = self.get_requirements(
                 args,
                 options,
                 finder,
                 session,
-                self.name,
-                None
             )
 
             candidates = []
-            for req in requirement_set.requirements.values():
+            for req in requirement_set:
                 # extract from finder.find_requirement
                 all_candidates = finder.find_all_candidates(req.name)
                 candidates.extend(all_candidates)
 
         self.candidates = candidates
+        return SUCCESS
 
 
 def _input_to_download_args(resconfig, destdir=None) -> List[str]:
@@ -171,7 +165,7 @@ def _pip_query_candidates(resconfig) -> List[InstallationCandidate]:
     args = _input_to_download_args(resconfig)
 
     with redirect_stdout(sys.stderr):
-        cmd = ListVersionsCommand()
+        cmd = ListVersionsCommand('list versions', 'list versions')
         rc = cmd.main(args)
         # pip 10.0.1 returns 0 even on connection problems, which get output to stderr
         # but cannot be clearly distinguised from a successful 'not found'.
