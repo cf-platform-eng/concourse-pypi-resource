@@ -29,10 +29,13 @@ test/test_dist: clean_test
 test: test/test_dist .venv/.installed
 	pipenv run pytest test/unittests.py
 
-dist: .venv/.installed 
+dist: docker
+
+sdist: .venv/.installed
 	rm -f dist/*
 	pipenv run python setup.py sdist
 
+docker: sdist
 	docker rmi -f $$(docker images --format '{{.Repository}}:{{.Tag}}' | grep '$(DOCKER_NAME)') 2>/dev/null || true
 
 	version=$$(cat .version) && \
