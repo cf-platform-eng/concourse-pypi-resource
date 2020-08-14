@@ -9,6 +9,11 @@ resource_types:
 
 resources:
 
+- name: code
+  type: git
+  source:
+    uri: http://github.com/cf-platform-eng/concourse-pypi-resource
+
 - name: version
   type: semver
   source:
@@ -32,6 +37,29 @@ resources:
     password: {{pypi-password}}
 
 jobs:
+
+- name: unit-test
+  plan:
+  - get: code
+    trigger: true
+  - task: run-unit-tests
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: python
+          tag: '2'
+      inputs:
+      - name: code
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          apt -q update
+          apt -yq install pipenv
+          cd code && pipenv run make test
 
 - name: check-and-get
   plan:
