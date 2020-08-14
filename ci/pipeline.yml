@@ -14,7 +14,15 @@ resources:
   source:
     uri: http://github.com/cf-platform-eng/concourse-pypi-resource
 
-- name: version
+- name: docker-acceptance
+  type: docker-image
+  source:
+    repository: cfplatformeng/concourse-pypi-resource
+    tag: acceptance
+    username: {{docker-username}}
+    password: {{docker-password}}
+
+- name: test-package-version
   type: semver
   source:
     driver: git
@@ -61,13 +69,44 @@ jobs:
           apt -yq install pipenv
           cd code && pipenv run make test
 
+- name: package
+  serial: true
+  plan:
+  - get: code
+    trigger: true
+    passed: [unit-test]
+  - task: package
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: python
+          tag: '2'
+      inputs:
+      - name: code
+      outputs:
+      - name: docker-build
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          apt -q update
+          apt -yq install pipenv
+          cd code && pipenv run make sdist
+          cp -r Dockerfile dist ../docker-build/
+  - put: docker-acceptance
+    params:
+      build: docker-build
+
 - name: check-and-get
   plan:
   - get: pypi-package
 
 - name: out
   plan:
-  - put: version
+  - put: test-package-version
     params:
       bump: patch
   - get: package-repo
