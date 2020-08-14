@@ -61,7 +61,7 @@ class TestConfiguration(unittest.TestCase):
         resconfig = {'source': {'username': 'u', 'password': 'p', 'repository_url': 'url'}}
         result = common.merge_defaults(resconfig)
 
-        self.assertDictContainsSubset(expected['source']['repository'], result['source']['repository'])
+        self.assertLessEqual(expected['source']['repository'].items(), result['source']['repository'].items())
 
 
 class TestPypi(unittest.TestCase):
