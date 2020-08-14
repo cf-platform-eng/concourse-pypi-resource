@@ -18,9 +18,11 @@ from contextlib import redirect_stdout
 from typing import Dict, List, Tuple
 from urllib.parse import urlsplit, urlunsplit
 
-from pip._internal.commands import DownloadCommand as PipDownloadCommand
-from pip._internal.download import PipSession, unpack_url
-from pip._internal.index import InstallationCandidate, Link
+from pip._internal.commands.download import DownloadCommand as PipDownloadCommand
+from pip._internal.network.session import PipSession
+from pip._internal.operations.prepare import unpack_url
+from pip._internal.models.candidate import InstallationCandidate
+from pip._internal.models.link import Link
 from pip._internal.req import RequirementSet
 from pip._vendor.packaging.version import Version, InvalidVersion
 
@@ -139,7 +141,7 @@ def get_pypi_url(input, mode='in', kind='repository') -> Tuple[str, str]:
 
 def _candidate_to_package_info_artefact(candidate: InstallationCandidate) -> Dict[str, str]:
     """ Provide artifact metadata """
-    loc = candidate.location
+    loc = candidate.link
     artefact = {
         'filename': loc.filename,
         'hash': '{}:{}'.format(loc.hash_name, loc.hash),
@@ -206,7 +208,7 @@ def pip_get_versions(resconfig) -> Dict[str, dict]:
             version = {
                 'artefacts': [],
                 'metadata': {
-                    'package_key': candidate.project,
+                    'package_key': candidate.name,
                 },
             }
             versions[candidate.version] = version

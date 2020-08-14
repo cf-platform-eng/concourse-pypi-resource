@@ -19,7 +19,8 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from pip._internal.index import InstallationCandidate, Link
+from pip._internal.models.candidate import InstallationCandidate
+from pip._internal.models.link import Link
 
 from pypi_resource import check, common, pipio
 
