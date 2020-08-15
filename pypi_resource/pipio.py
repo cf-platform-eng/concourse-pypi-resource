@@ -19,14 +19,14 @@ from typing import Dict, List, Tuple
 from urllib.parse import urlsplit, urlunsplit
 
 from pip._internal.commands.download import DownloadCommand as PipDownloadCommand
+from pip._internal.network.download import Downloader
 from pip._internal.network.session import PipSession
 from pip._internal.operations.prepare import unpack_url
 from pip._internal.models.candidate import InstallationCandidate
 from pip._internal.models.link import Link
 from pip._internal.models.target_python import TargetPython
 from pip._internal.cli.status_codes import SUCCESS
-from pip._internal.req import RequirementSet
-from pip._vendor.packaging.version import Version, InvalidVersion
+from pip._vendor.packaging.version import Version, InvalidVersion # for other files
 
 from . import common
 
@@ -168,7 +168,7 @@ def _pip_query_candidates(resconfig) -> List[InstallationCandidate]:
         cmd = ListVersionsCommand('list versions', 'list versions')
         rc = cmd.main(args)
         # pip 10.0.1 returns 0 even on connection problems, which get output to stderr
-        # but cannot be clearly distinguised from a successful 'not found'.
+        # but cannot be clearly distinguished from a successful 'not found'.
         if rc == 0:
             candidates = cmd.candidates
         else:
@@ -180,7 +180,7 @@ def _pip_query_candidates(resconfig) -> List[InstallationCandidate]:
 
 def pip_get_versions(resconfig) -> Dict[str, dict]:
     # JSON protocol query as used in version 0.2.0 could still be used here,
-    # but does not include mechnisms of filtering (platform, abi, python_version,
+    # but does not include mechanisms of filtering (platform, abi, python_version,
     # packaging) that pip includes.
     # candidates = _pip_query_pypi_json(resconfig)
     candidates = _pip_query_candidates(resconfig)
@@ -211,19 +211,18 @@ def pip_get_versions(resconfig) -> Dict[str, dict]:
     return versions
 
 
-def pip_download_link(resconfig, url: str, destdir: str) -> Dict:
-    link = Link(url)
-    tmpdir = tempfile.mkdtemp(prefix='.tmp-')
+def pip_download_link(resconfig, url: str, destdir: str):
     with redirect_stdout(sys.stderr):
 
         netloc = urlsplit(resconfig['source']['repository']['index_url'])[1]
         hostname = netloc.split(':')[0]
-        with PipSession(retries=RETRIES, insecure_hosts=[hostname, ]) as session:
+        with PipSession(retries=RETRIES, trusted_hosts=[hostname, ]) as session:
             session.timeout = TIMEOUT
             session.auth.prompting = False
             session.auth.passwords[netloc] = (resconfig['source']['repository'].get('username', None),
                                               resconfig['source']['repository'].get('password', None))
-
-            unpack_url(link, tmpdir, destdir, only_download=True, session=session)
-
-    shutil.rmtree(tmpdir)
+            unpack_url(
+                Link(url),
+                destdir,
+                Downloader(session, "pretty"),
+            )
