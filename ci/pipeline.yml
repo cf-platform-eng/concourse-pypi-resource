@@ -7,6 +7,12 @@ resource_types:
     repository: cfplatformeng/concourse-pypi-resource
     tag: {{pypi-resource-tag}}
 
+- name: pypi-acceptance
+  type: docker-image
+  source:
+    repository: cfplatformeng/concourse-pypi-resource
+    tag: acceptance
+
 resources:
 
 - name: code
@@ -36,8 +42,8 @@ resources:
   source:
     uri: http://github.com/cf-platform-eng/test-python-package
 
-- name: pypi-package
-  type: pypi
+- name: acceptance-test-resource
+  type: pypi-acceptance
   source:
     name: cf-platform-eng
     test: true
@@ -100,12 +106,11 @@ jobs:
     params:
       build: docker-build
 
-- name: check-and-get
+- name: acceptance-test
+  serial: true
   plan:
-  - get: pypi-package
-
-- name: out
-  plan:
+  - get: docker-acceptance
+    trigger: true
   - put: test-package-version
     params:
       bump: patch
@@ -130,6 +135,7 @@ jobs:
           cd package-repo
           python setup.py sdist
           cp dist/*.tar.gz ../package-out/
-  - put: pypi-package
+  - put: acceptance-test-resource
     params:
       glob: package-out/*.tar.gz
+  - get: acceptance-test-resource
