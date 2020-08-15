@@ -37,6 +37,7 @@ setup(
     version = read_version(),
     description = 'Concourse CI resource for PyPI packages.',
     long_description = read_readme(),
+    long_description_content_type = 'text/markdown',
     platforms = ['linux'],
     url = 'https://github.com/cf-platform-eng/pypi-resource',
     author = 'Pivotal Cloud Foundry Platform Engineering',
