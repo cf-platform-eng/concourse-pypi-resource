@@ -125,7 +125,7 @@ class TestCheck(unittest.TestCase):
             python_version='2',
             packaging='any',
         )
-        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])
 
         versions = self.get_versions(
             name='test_package1',
@@ -139,7 +139,7 @@ class TestCheck(unittest.TestCase):
             python_version='3',
             packaging='any',
         )
-        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])
 
         versions = self.get_versions(
             name='test_package1',
