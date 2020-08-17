@@ -78,8 +78,8 @@ def in_(destdir, instream):
 
     # fetch metadata from download
     destfiles = os.listdir(destdir)
-    assert len(destfiles) == 1
-    pkg_info = common.get_package_info(os.path.join(destdir, destfiles[0]))
+    package_info_path = os.path.join(destdir, destfiles[0]) if len(destfiles) == 1 else destdir
+    pkg_info = common.get_package_info(package_info_path)
     response['metadata'].update(pkg_info['metadata'])
 
     # provide other output files

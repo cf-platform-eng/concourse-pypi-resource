@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import glob
 import unittest
 import io
 import json
@@ -42,6 +42,30 @@ class TestGet(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             in_.in_(tmpdir, resconfig)
+            files = os.listdir(tmpdir)
+            self.assertIn('version', files)
+            self.assertIn('semver', files)
+            self.assertEqual(len(glob.glob(os.path.join(tmpdir, '*.whl'))), 1)
+
+    def test_get_pypi_source(self):
+        resconfig = io.StringIO(
+            json.dumps({
+                'source': {
+                    'name': 'cf_platform_eng',
+                    'test': True,
+                },
+                'version': {
+                    'version': '0.0.45',
+                },
+            })
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            in_.in_(tmpdir, resconfig)
+            files = os.listdir(tmpdir)
+            self.assertIn('version', files)
+            self.assertIn('semver', files)
+            self.assertIn('setup.py', files)
+
 
 class TestPut(unittest.TestCase):
 
