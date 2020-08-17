@@ -15,14 +15,33 @@
 # limitations under the License.
 
 import unittest
+import io
+import json
 import os
 import subprocess
+import tempfile
 
-from pypi_resource import common, out, pipio
+from pypi_resource import common, in_, out, pipio
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 REPODIR = os.path.join(THISDIR, '..')
 
+class TestGet(unittest.TestCase):
+
+    def test_get_pypi(self):
+        resconfig = io.StringIO(
+            json.dumps({
+                'source': {
+                    'name': 'numpy',
+                    'test': False,
+                },
+                'version': {
+                    'version': '1.19.1',
+                },
+            })
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            in_.in_(tmpdir, resconfig)
 
 class TestPut(unittest.TestCase):
 
