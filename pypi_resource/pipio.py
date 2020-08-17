@@ -26,6 +26,7 @@ from pip._internal.models.candidate import InstallationCandidate
 from pip._internal.models.link import Link
 from pip._internal.models.target_python import TargetPython
 from pip._internal.cli.status_codes import SUCCESS
+from pip._internal.utils.temp_dir import global_tempdir_manager
 from pip._vendor.packaging.version import Version, InvalidVersion # for other files
 
 from . import common
@@ -187,7 +188,7 @@ def pip_get_versions(resconfig) -> Dict[str, dict]:
 
     if resconfig['source'].get('filename_match', None):
         matchstr = resconfig['source']['filename_match']
-        candidates = filter(lambda x: matchstr in x.location.filename, candidates)
+        candidates = filter(lambda x: matchstr in x.link.filename, candidates)
 
     if not resconfig['source']['pre_release']:
         candidates = filter(lambda x: not (x.version.is_prerelease or x.version.is_devrelease), candidates)
@@ -221,8 +222,12 @@ def pip_download_link(resconfig, url: str, destdir: str):
             session.auth.prompting = False
             session.auth.passwords[netloc] = (resconfig['source']['repository'].get('username', None),
                                               resconfig['source']['repository'].get('password', None))
-            unpack_url(
-                Link(url),
-                destdir,
-                Downloader(session, "pretty"),
-            )
+            # pip internals hardcode global tempdir manager.
+            # need to copy to destdir before tempdir gets blown away.
+            with global_tempdir_manager():
+                file = unpack_url(
+                    Link(url),
+                    destdir,
+                    Downloader(session, "pretty"),
+                )
+                shutil.copy(file.path, destdir)
