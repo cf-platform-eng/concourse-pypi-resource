@@ -28,6 +28,14 @@ resources:
     username: {{docker-username}}
     password: {{docker-password}}
 
+- name: docker-production
+  type: docker-image
+  source:
+    repository: cfplatformeng/concourse-pypi-resource
+    tag: latest
+    username: {{docker-username}}
+    password: {{docker-password}}
+
 - name: test-package-version
   type: semver
   source:
@@ -111,6 +119,7 @@ jobs:
   plan:
   - get: docker-acceptance
     trigger: true
+    passed: [package]
   - put: test-package-version
     params:
       bump: patch
@@ -139,3 +148,13 @@ jobs:
     params:
       glob: package-out/*.tar.gz
   - get: acceptance-test-resource
+
+- name: promote-to-prod
+  plan:
+  - get: docker-acceptance
+    passed: [acceptance-test]
+    params:
+      save: true
+  - put: docker-production
+    params:
+      load: docker-acceptance
