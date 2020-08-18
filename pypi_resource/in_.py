@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import glob
 import json
 import os
 import sys
@@ -77,8 +77,8 @@ def in_(destdir, instream):
     response = download_version(resconfig, destdir)
 
     # fetch metadata from download
-    destfiles = os.listdir(destdir)
-    package_info_path = os.path.join(destdir, destfiles[0]) if len(destfiles) == 1 else destdir
+    wheel = glob.glob(os.path.join(destdir, '*.whl'))
+    package_info_path = wheel[0] if wheel else destdir
     pkg_info = common.get_package_info(package_info_path)
     response['metadata'].update(pkg_info['metadata'])
 
