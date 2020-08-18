@@ -114,6 +114,7 @@ jobs:
           tag: '2'
       inputs:
       - name: code
+      - name: version
       outputs:
       - name: docker-build
       run:
