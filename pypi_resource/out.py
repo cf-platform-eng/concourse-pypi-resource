@@ -32,24 +32,27 @@ def find_package(pattern, srcdir):
 
 def upload_package(pkgpath, input):
     repocfg = input['source']['repository']
-    twine_cmd = ['twine', 'upload']
+    twine_cmd = [sys.executable, '-m', 'twine', 'upload']
 
-    url, unused_hostname = pipio.get_pypi_url(input, 'out') 
-    twine_cmd.extend(['--repository-url', url])
+    url, unused_hostname = pipio.get_pypi_url(input, 'out')
 
     username = repocfg.get('username', os.getenv('TWINE_USERNAME'))
     password = repocfg.get('password', os.getenv('TWINE_PASSWORD'))
-    if username and password:
-        twine_cmd.append('--username')
-        twine_cmd.append(username)
-        twine_cmd.append('--password')
-        twine_cmd.append(password)
-    else:
+    if not (username and password):
         raise KeyError("username and password required to upload")
 
     twine_cmd.append(pkgpath)
 
-    subprocess.run(twine_cmd, stdout=sys.stderr.fileno(), check=True)
+    subprocess.run(
+        twine_cmd,
+        stdout=sys.stderr.fileno(),
+        check=True,
+        env={
+            'TWINE_USERNAME': username,
+            'TWINE_PASSWORD': password,
+            'TWINE_REPOSITORY_URL': url
+        }
+    )
 
 
 def out(srcdir, input):

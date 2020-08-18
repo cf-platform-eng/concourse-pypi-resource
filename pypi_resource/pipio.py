@@ -121,7 +121,7 @@ def get_pypi_url(input, mode='in', kind='repository') -> Tuple[str, str]:
         url = repocfg[key]    
     url_parts = urlsplit(url)
 
-    if mode == 'out' or repocfg.get('authenticate', None) == 'always':
+    if repocfg.get('authenticate', None) == 'always':
         host_login = '%s:%s@%s' % (
             repocfg.get('username', ''),
             repocfg.get('password', ''),
