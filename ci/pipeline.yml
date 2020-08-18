@@ -13,6 +13,11 @@ resource_types:
     repository: cfplatformeng/concourse-pypi-resource
     tag: acceptance
 
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+
 resources:
 
 - name: code
@@ -68,6 +73,12 @@ resources:
     test: true
     username: {{pypi-username}}
     password: {{pypi-password}}
+
+- name: pull-request
+  type: pull-request
+  source:
+    repository: cf-platform-eng/concourse-pypi-resource
+    access_token: {{github-pr-token}}
 
 jobs:
 
@@ -217,3 +228,43 @@ jobs:
     params:
       bump: pre
       pre: rc
+
+- name: test-pull-request
+  plan:
+  - get: code
+    resource: pull-request
+    trigger: true
+    version: every
+    params:
+      integration_tool: rebase
+  - put: pull-request
+    params:
+      path: code
+      status: pending
+  - task: run-unit-tests
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: python
+          tag: '2'
+      inputs:
+      - name: code
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          apt -q update
+          apt -yq install pipenv
+          cd code && pipenv run make test
+    on_failure:
+      put: pull-request
+      params:
+        path: code
+        status: failure
+  - put: pull-request
+    params:
+      path: code
+      status: success
