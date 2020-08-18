@@ -19,6 +19,8 @@ resources:
   type: git
   source:
     uri: http://github.com/cf-platform-eng/concourse-pypi-resource
+    ignore_paths:
+    - .version
 
 - name: docker-acceptance
   type: docker-image
@@ -35,6 +37,15 @@ resources:
     tag: latest
     username: {{docker-username}}
     password: {{docker-password}}
+
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:cf-platform-eng/concourse-pypi-resource
+    branch: master
+    file: .version
+    private_key: {{github-private-key}}
 
 - name: test-package-version
   type: semver
@@ -86,6 +97,10 @@ jobs:
 - name: package
   serial: true
   plan:
+  - get: version
+    params:
+      bump: pre
+      pre: rc
   - get: code
     trigger: true
     passed: [unit-test]
@@ -108,15 +123,22 @@ jobs:
         - |
           apt -q update
           apt -yq install pipenv
+          cp version/version code/.version
           cd code && pipenv run make sdist
           cp -r Dockerfile dist ../docker-build/
   - put: docker-acceptance
     params:
       build: docker-build
+      additional_tags: version/version
+  - put: version
+    params:
+      file: version/version
 
 - name: acceptance-test
   serial: true
   plan:
+  - get: version
+    passed: [package]
   - get: docker-acceptance
     trigger: true
     passed: [package]
@@ -151,6 +173,10 @@ jobs:
 
 - name: promote-to-prod
   plan:
+  - get: version
+    passed: [acceptance-test]
+    params:
+      bump: final
   - get: docker-acceptance
     passed: [acceptance-test]
     params:
@@ -158,3 +184,35 @@ jobs:
   - put: docker-production
     params:
       load: docker-acceptance
+      additional_tags: version/version
+  - put: version
+    params:
+      file: version/version
+
+- name: bump-major
+  plan:
+  - put: version
+    params:
+      bump: major
+      pre: rc
+
+- name: bump-minor
+  plan:
+  - put: version
+    params:
+      bump: minor
+      pre: rc
+
+- name: bump-patch
+  plan:
+  - put: version
+    params:
+      bump: patch
+      pre: rc
+
+- name: bump-rc
+  plan:
+  - put: version
+    params:
+      bump: pre
+      pre: rc
