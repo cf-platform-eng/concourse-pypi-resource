@@ -52,8 +52,7 @@ def download_version(resconfig, destdir):
     # fetch all matching versions/artifacts
     package_info = pipio.pip_get_versions(resconfig)
     if not package_info:
-        common.msg("No matching packages found.")
-        return {}
+        raise ValueError("No matching packages found.")
 
     version = resconfig['version']['version']
     if not version:
