@@ -68,9 +68,9 @@ resources:
 ```
 
 ## `get`: Download the latest version
-No parameters.
-__TODO__
- * `version.version`: *Optional*, defaults to latest version
+* `version.version`: *Optional*, defaults to latest version
+* `count_retries`: *Optional* Number of maximum retry before the task fails. By default 20 times.
+* `delay_between_retries`: *Optional* Time to wait in sec between two iterations of retry. By default 3s.
 
 ### Additional files populated
  * `version`: [Python version number](https://www.python.org/dev/peps/pep-0440/) of the downloaded package
@@ -87,12 +87,18 @@ plan:
 ## `put`: Upload a new version
 * `glob`: *Required* A [glob](https://docs.python.org/2/library/glob.html) expression matching the package file to upload.
 
+### Note
+You can modify `count_retries` and `delay_between_retries` in `get_params` to give enough time to PyPi to make available your package.
+
 ### Example
 ```yaml
 plan:
 - put: my-pypi-package
   params:
     glob: 'task-out-folder/my_package-*.tar.gz'
+  get_params:
+    count_retries: 10
+    delay_between_retries: 30
 ```
 
 ## Development
