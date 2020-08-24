@@ -25,7 +25,7 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 |`repository.repository_url` |[PyPI](https://upload.pypi.org/legacy)|optional         | url to a twine compatible repository for upload
 |`repository.username`       |-/-     |req. for uploads | username for PyPI server authentication
 |`repository.password`       |-/-     |req. for uploads | password for PyPI server authentication
-|`repository.authenticate`   |out     |optional         | set to `always` to authenticate to a private repository for check and download also
+|`repository.authenticate`   |out     |optional         | set to `in` to authenticate to a private repo for check and download only, `always` to authenticate to a private repository for upload, check and download.
 
 ### Deprecated parameters (since version 0.2.0)
 * `python_version`: gets mapped to `filename_match` if it's not a version number. `python_version` is now only used for the actual interpreter version to have a transparent mapping to pip.

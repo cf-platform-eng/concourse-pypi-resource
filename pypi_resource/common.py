@@ -149,7 +149,7 @@ def merge_defaults(resconfig):
     if not isinstance(repository, dict):
         raise ValueError('ERROR: source.repository must be a dictionary (using names is deprecated).')
     repository.setdefault('authenticate', 'out')
-    assert repository['authenticate'] in ['out', 'always']
+    assert repository['authenticate'] in ['in', 'out', 'always']
 
     # move deprecated values from source to source.repository
     for key in ['username', 'password', 'repository_url', 'test']:
