@@ -22,6 +22,10 @@ from . import common, pipio
 from .retry import retry_wrapper
 
 
+RETRIES = 20
+DELAY = 3
+
+
 def select_artefact_for_response(package_info, version: pipio.Version, artefact_index: int=0):
     """
     From the package_info returned by pip_get_version select a specific version/artefact and
@@ -47,13 +51,11 @@ def select_artefact_for_response(package_info, version: pipio.Version, artefact_
     }
 
 
-@retry_wrapper(20, 3)
 def download_version(resconfig, destdir):
     # fetch all matching versions/artifacts
     package_info = pipio.pip_get_versions(resconfig)
     if not package_info:
-        common.msg("No matching packages found.")
-        return {}
+        raise ValueError("No matching packages found.")
 
     version = resconfig['version']['version']
     if not version:
@@ -74,7 +76,10 @@ def in_(destdir, instream):
     resconfig = json.load(instream)
     common.merge_defaults(resconfig)
 
-    response = download_version(resconfig, destdir)
+    retries = resconfig['params'].get('count_retries', RETRIES)
+    delay = resconfig['params'].get('delay_between_retries', DELAY)
+    download = retry_wrapper(retries, delay)(download_version)
+    response = download(resconfig, destdir)
 
     # fetch metadata from download
     wheel = glob.glob(os.path.join(destdir, '*.whl'))
