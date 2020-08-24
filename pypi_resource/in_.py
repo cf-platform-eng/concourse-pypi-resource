@@ -76,8 +76,8 @@ def in_(destdir, instream):
     resconfig = json.load(instream)
     common.merge_defaults(resconfig)
 
-    retries = resconfig['params'].get('count_retries', RETRIES)
-    delay = resconfig['params'].get('delay_between_retries', DELAY)
+    retries = resconfig.get('params', {}).get('count_retries', RETRIES)
+    delay = resconfig.get('params', {}).get('delay_between_retries', DELAY)
     download = retry_wrapper(retries, delay)(download_version)
     response = download(resconfig, destdir)
 
