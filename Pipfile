@@ -14,3 +14,7 @@ pytest = "*"
 flake8 = "*"
 pylint = "*"
 semver = "*"
+
+[requires]
+python_version = "3.8"
+
