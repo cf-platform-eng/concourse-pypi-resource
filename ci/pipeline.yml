@@ -102,7 +102,7 @@ jobs:
         - -exc
         - |
           apt -q update
-          apt -yq install pipenv
+          apt -yq install pipenv python-pip virtualenv
           cd code && pipenv run make test
 
 - name: package
@@ -134,7 +134,7 @@ jobs:
         - -exc
         - |
           apt -q update
-          apt -yq install pipenv
+          apt -yq install pipenv virtualenv
           cp version/version code/.version
           cd code && pipenv run make sdist
           cp -r Dockerfile dist ../docker-build/
