@@ -23,6 +23,10 @@ import sys
 from . import common, pipio
 
 
+class NamesValidationError(Exception):
+    pass
+
+
 def find_package(pattern, srcdir):
     files = glob.glob(os.path.join(srcdir, pattern))
     common.msg('Glob {} matched files: {}', pattern, files)
@@ -62,6 +66,16 @@ def out(srcdir, input):
     pkgpath = find_package(input['params']['glob'], srcdir)
     response = common.get_package_info(pkgpath)
     version = str(response['version'])
+
+    # Implement the check `input name = package name`
+    common.msg('Check that the package name = input name')
+    package_name = str(response['metadata']['package_name'])
+    input_name = str(input['source']['name'])
+    print(f"{package_name} <--> {input_name}")
+    if package_name != input_name:
+        raise NamesValidationError(
+            f"Different names for package ({package_name}) and input ({input_name})"
+        )
 
     common.msg('Uploading {} version {}', pkgpath, version)
     upload_package(pkgpath, input)
