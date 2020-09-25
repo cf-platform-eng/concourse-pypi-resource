@@ -75,10 +75,22 @@ class TestPut(unittest.TestCase):
         out.out(
             os.path.join(REPODIR, 'dist'),
             {
-                'source': {'test': True},
+                'source': {'test': True, 'name': 'concourse-pypi-resource'},
                 'params': {'glob': '*.tar.gz'}
             }
         )
+
+    def test_fail_to_upload_if_input_name_different_from_package_name(self):
+        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
+        print("sdist returned", rc)
+        with self.assertRaises(out.NamesValidationError) as context:
+            out.out(
+                os.path.join(REPODIR, 'dist'),
+                {
+                    'source': {'test': True, 'name': 'concourse-resource'},
+                    'params': {'glob': '*.tar.gz'}
+                }
+            )
 
 
 class TestPip(unittest.TestCase):
