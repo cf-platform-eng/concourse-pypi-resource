@@ -21,7 +21,10 @@ import subprocess
 import sys
 
 from . import common, pipio
+from pep440 import is_canonical
 
+class VersionValidationError(Exception):
+    pass
 
 def find_package(pattern, srcdir):
     files = glob.glob(os.path.join(srcdir, pattern))
@@ -62,6 +65,11 @@ def out(srcdir, input):
     pkgpath = find_package(input['params']['glob'], srcdir)
     response = common.get_package_info(pkgpath)
     version = str(response['version'])
+
+    if not is_canonical(version):
+        raise VersionValidationError(
+            f"Version {version} string is not compliant with PEP 440 versioning convention"
+        )
 
     common.msg('Uploading {} version {}', pkgpath, version)
     upload_package(pkgpath, input)
