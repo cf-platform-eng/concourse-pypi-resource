@@ -56,6 +56,7 @@ setup(
     install_requires = [
         'pkginfo',
         'twine',
+        'pep440',
         'pip',
     ],
     setup_requires = [],

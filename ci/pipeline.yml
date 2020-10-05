@@ -69,7 +69,7 @@ resources:
 - name: acceptance-test-resource
   type: pypi-acceptance
   source:
-    name: cf-platform-eng
+    name: cf_platform_eng
     test: true
     username: {{pypi-username}}
     password: {{pypi-password}}

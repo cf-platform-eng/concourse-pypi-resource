@@ -87,8 +87,20 @@ class TestPut(unittest.TestCase):
             out.out(
                 os.path.join(REPODIR, 'dist'),
                 {
-                    'source': {'test': True, 'name': 'concourse-resource'},
+                    'source': {'test': True, 'name': 'mismatching-name'},
                     'params': {'glob': '*.tar.gz'}
+                }
+            )
+
+    def test_fail_to_upload_if_package_version_not_pep440_compliant(self):
+        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=os.path.join(THISDIR, 'test_package1_4'))
+        print("sdist returned", rc)
+        with self.assertRaises(out.VersionValidationError):
+            out.out(
+                os.path.join(THISDIR, 'test_package1_4'),
+                {
+                    'source': {'test': True, 'name': 'test_package1'},
+                    'params': {'glob': 'dist/*.tar.gz'}
                 }
             )
 
