@@ -70,11 +70,9 @@ def out(srcdir, input):
     response = common.get_package_info(pkgpath)
     version = str(response['version'])
 
-    # Implement the check `input name = package name`
     common.msg('Check that the package name = input name')
     package_name = str(response['metadata']['package_name'])
     input_name = str(input['source']['name'])
-    print(f"{package_name} <--> {input_name}")
     if package_name != input_name:
         raise NamesValidationError(
             f"Different names for package ({package_name}) and input ({input_name})"
