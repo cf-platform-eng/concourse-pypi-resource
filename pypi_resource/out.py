@@ -76,7 +76,7 @@ def out(srcdir, input):
     name_must_match = input['source']['name_must_match']
     if name_must_match and package_name != input_name:
         raise NamesValidationError(
-            f"Different names for package ({package_name}) and input ({input_name})"
+            f"Different names for package ({package_name}) and input ({input_name}). If this is intentional, you can configure `name_must_match` to `false`."
         )
     if not is_canonical(version):
         raise VersionValidationError(
