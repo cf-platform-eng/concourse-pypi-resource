@@ -11,6 +11,7 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 |----------------------------|-------|---------|-----------
 |__PACKAGE SELECTION__
 |`name`                      |-       |required | name of the package
+|`name_must_match  `         |`true`  |optional | require the project name and the packge name to match (see [PEP-423](https://www.python.org/dev/peps/pep-0423/#use-a-single-name))
 |`pre_release`               |`false` |optional | check dev and pre-release versions (see [PEP-440](https://www.python.org/dev/peps/pep-0440))
 |`release`                   |`true`  |optional | check release versions
 |`filename_match`            |-/-     |optional | only include packages containing this string (e.g. `py2.py3`, `.whl`)

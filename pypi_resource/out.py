@@ -73,7 +73,8 @@ def out(srcdir, input):
     common.msg('Check that the package name = input name')
     package_name = str(response['metadata']['package_name'])
     input_name = str(input['source']['name'])
-    if package_name != input_name:
+    name_must_match = input['source']['name_must_match']
+    if name_must_match and package_name != input_name:
         raise NamesValidationError(
             f"Different names for package ({package_name}) and input ({input_name})"
         )
