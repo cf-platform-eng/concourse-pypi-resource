@@ -81,6 +81,7 @@ def check_source(resconfig):
     }
     available_keys = {
         'name',
+        'name_must_match',
         'repository',
         'filename_match',
         'packaging',
@@ -121,6 +122,7 @@ def merge_defaults(resconfig):
     # setup source
     #
     source = resconfig['source']
+    source.setdefault('name_must_match', True)
     source.setdefault('pre_release', False)
     source.setdefault('release', True)
     source.setdefault('packaging', 'any')

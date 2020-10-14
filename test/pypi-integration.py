@@ -92,6 +92,18 @@ class TestPut(unittest.TestCase):
                 }
             )
 
+    def test_upload_when_different_names_allowed(self):
+        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
+        print("sdist returned", rc)
+        with self.assertRaises(out.NamesValidationError) as context:
+            out.out(
+                os.path.join(REPODIR, 'dist'),
+                {
+                    'source': {'test': True, 'name': 'mismatching-name', 'name_must_match': False},
+                    'params': {'glob': '*.tar.gz'}
+                }
+            )
+
     def test_fail_to_upload_if_package_version_not_pep440_compliant(self):
         rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=os.path.join(THISDIR, 'test_package1_4'))
         print("sdist returned", rc)
