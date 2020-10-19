@@ -388,11 +388,11 @@
         },
         "semver": {
             "hashes": [
-                "sha256:c0591b618be648a22e9cd0ce381a7076e5d52e19f53d568543c3afcf17d5dcbc",
-                "sha256:ef6614e75c1526784580ed0a2939272fcd36f4aad472617774e588c4adbc08a3"
+                "sha256:9661f6920fe546b70c7cdde8ca6420d852516efdfa2dbc1e58ab5972e773f43d",
+                "sha256:a7b14edf94747ebdd08a5ee7c1d0366b039cf144f0e0eba6553b2c6d2bf9b6f8"
             ],
             "index": "pypi",
-            "version": "==2.11.0"
+            "version": "==2.12.0"
         },
         "six": {
             "hashes": [
