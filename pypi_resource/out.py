@@ -50,15 +50,18 @@ def upload_package(pkgpath, input):
 
     twine_cmd.append(pkgpath)
 
+    env = os.environ.copy()
+    env.update({
+        'TWINE_USERNAME': username,
+        'TWINE_PASSWORD': password,
+        'TWINE_REPOSITORY_URL': url
+    })
+
     subprocess.run(
         twine_cmd,
         stdout=sys.stderr.fileno(),
         check=True,
-        env={
-            'TWINE_USERNAME': username,
-            'TWINE_PASSWORD': password,
-            'TWINE_REPOSITORY_URL': url
-        }
+        env=env
     )
 
 
