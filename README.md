@@ -1,7 +1,7 @@
 # PyPI Package Resource
-A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.org) packages. This is an enhanced fork of [cf-platform-eng/concourse-pypi-resource](https://github.com/cf-platform-eng/concourse-pypi-resource), that adds compatibility to most PyPI repository types and extended package selection parameters.
+A [Concourse CI](http://concourse.ci) resource for Python [PyPI](https://pypi.org) packages.
 
-It can be used to check/download existing packages and to manages your own builds as well. Internally it uses [Pip 10.0.1](https://pip.pypa.io/en/stable/reference/pip_download/#options) for *check* and *in* (downloads) and [twine] for *out*put.
+It can be used to check/download existing packages and to manages your own builds as well. Internally it uses [Pip 10.0.1](https://pip.pypa.io/en/stable/reference/pip_download/#options) for *check* and *in* (downloads) and [twine](https://twine.readthedocs.io/en/latest/) for *out*put.
 
 Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatformeng/concourse-pypi-resource.
 
