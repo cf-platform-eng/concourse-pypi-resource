@@ -48,7 +48,7 @@ resources:
   source:
     driver: git
     uri: git@github.com:cf-platform-eng/concourse-pypi-resource
-    branch: master
+    branch: main
     file: .version
     private_key: {{github-private-key}}
 
@@ -57,7 +57,7 @@ resources:
   source:
     driver: git
     uri: git@github.com:cf-platform-eng/test-python-package
-    branch: master
+    branch: main
     file: version
     private_key: {{github-private-key}}
 
