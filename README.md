@@ -119,12 +119,19 @@ make dist
 make push
 ```
 
-Run local test runs like this:
+Run local test runs like this (nexus):
 ```sh
 # check
 docker run -i cfplatformeng/concourse-pypi-resource:latest-rc check < test/input/check-nexus.json | jq
 # in
-docker run --rm -i --volume destdir cfplatformeng/concourse-pypi-resource:latest-rc in destdir < test/input/in-nexus.json | jq
+docker run --rm -i --volume $(pwd)/output:/destdir cfplatformeng/concourse-pypi-resource:latest-rc in /destdir < test/input/in-nexus.json | jq
+```
+or using public PyPi:
+```sh
+# check
+docker run -i cfplatformeng/concourse-pypi-resource:latest-rc check < test/input/check-public.json | jq
+# in
+docker run --rm -i --volume $(pwd)/output:/destdir cfplatformeng/concourse-pypi-resource:latest-rc in /destdir < test/input/in-public.json | jq
 ```
 
 ### Private repository integration tests (using Sonatype Nexus 3)
