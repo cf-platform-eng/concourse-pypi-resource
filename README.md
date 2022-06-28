@@ -29,7 +29,6 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 |`repository.authenticate`   |out     |optional         | set to `in` to authenticate to a private repo for check and download only, `always` to authenticate to a private repository for upload, check and download.
 
 ### Deprecated parameters (since version 0.2.0)
-* `python_version`: gets mapped to `filename_match` if it's not a version number. `python_version` is now only used for the actual interpreter version to have a transparent mapping to pip.
 * ~~`repository`~~: (special index-server name if it is specified in `~/.pypirc`). This is no longer available to the current implementation of check and in. Also there's no way to inject a `.pypirc` file into this Concourse resource type.
 * `repository`, `test`, `username` and `password`: get mapped to `repository.<key>`. This allows to configure private repositories through a single yaml-map parameter value, thus removing redundancy from the pipeline.
 
@@ -38,7 +37,7 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 ``` yaml
 resource_types:
 - name: pypi
-  type: docker-image
+  type: registry-image
   source:
     repository: cfplatformeng/concourse-pypi-resource
 
@@ -123,9 +122,9 @@ make push
 Run local test runs like this:
 ```sh
 # check
-docker run -i concourse-pypi-resource:latest-rc check < test/input/check-nexus.json | jq
+docker run -i cfplatformeng/concourse-pypi-resource:latest-rc check < test/input/check-nexus.json | jq
 # in
-docker run --rm -i --volume destdir concourse-pypi-resource:latest-rc in destdir < test/input/in-nexus.json | jq
+docker run --rm -i --volume destdir cfplatformeng/concourse-pypi-resource:latest-rc in destdir < test/input/in-nexus.json | jq
 ```
 
 ### Private repository integration tests (using Sonatype Nexus 3)
