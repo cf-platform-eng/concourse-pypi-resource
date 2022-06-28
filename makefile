@@ -5,7 +5,7 @@ DOCKER_NAME=concourse-pypi-resource
 all: dist
 
 clean: clean_test
-	rm -rf .eggs/ .pytest_cache/ .venv/ *.egg-info/ dist/
+	rm -rf .eggs/ .pytest_cache/ .venv/ *.egg-info/ dist/ build/
 	docker rmi -f $$(docker images --format '{{.Repository}}:{{.Tag}}' | grep '$(DOCKER_NAME)') 2>/dev/null || true
 
 clean_test:
@@ -29,11 +29,11 @@ test: test/test_dist .venv/.installed
 
 dist: docker
 
-sdist: .venv/.installed
+wheel: .venv/.installed
 	rm -f dist/*
 	pipenv run python setup.py bdist_wheel
 
-docker: sdist
+docker: wheel
 	docker rmi -f $$(docker images --format '{{.Repository}}:{{.Tag}}' | grep '$(DOCKER_NAME)') 2>/dev/null || true
 
 	version=$$(cat .version) && \
