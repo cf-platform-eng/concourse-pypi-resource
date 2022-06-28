@@ -21,10 +21,8 @@ Pipfile.lock: Pipfile
 
 test/test_dist: clean_test
 	find test/ -maxdepth 1 -type d -name 'test_package*' | xargs -I'{}' /bin/sh -c "cd '{}'; python3 setup.py bdist_egg; python3 setup.py bdist_wheel; python3 setup.py sdist"
-	find test/ -maxdepth 1 -type d -name 'test_package*' | xargs -I'{}' /bin/sh -c "cd '{}'; python2 setup.py bdist_wheel; python2 setup.py sdist"
 	mkdir test/test_dist
 	find test -type f -path 'test/test_package*/dist/*' | xargs -I'{}' mv -v '{}' test/test_dist/
-	rm test/test_dist/test_package1-1.0.1rc1-py2*
 
 test: test/test_dist .venv/.installed
 	pipenv run pytest test/unittests.py
@@ -33,7 +31,7 @@ dist: docker
 
 sdist: .venv/.installed
 	rm -f dist/*
-	pipenv run python setup.py sdist
+	pipenv run python setup.py bdist_wheel
 
 docker: sdist
 	docker rmi -f $$(docker images --format '{{.Repository}}:{{.Tag}}' | grep '$(DOCKER_NAME)') 2>/dev/null || true
