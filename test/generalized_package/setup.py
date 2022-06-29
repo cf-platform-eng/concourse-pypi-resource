@@ -8,7 +8,6 @@ setup(
     platforms = ['linux'],
     license = 'Apache 2.0',
     packages = ['test_package1',],
-    install_requires = [
-    ],
+    install_requires = [],
     include_package_data = True,
 )

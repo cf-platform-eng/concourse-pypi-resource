@@ -103,7 +103,7 @@ class TestPut(unittest.TestCase):
             }
         )
         print("sdist returned", rc)
-        with self.assertRaises(out.VersionValidationError) as context:
+        with self.assertRaises(out.VersionValidationError):
             out.out(
                 os.path.join(THISDIR, 'generalized_package/dist'),
                 {
