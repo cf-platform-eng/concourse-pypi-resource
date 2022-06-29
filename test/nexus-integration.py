@@ -41,10 +41,11 @@ def make_input(version, **kwargs):
     resconfig = {
         'source': {
             'name': 'somedemo',
-            'username': 'admin',
-            'password': 'admin123',
+            'name_must_match': False,
             'repository': {
                 'authenticate': 'always',
+                'username': 'admin',
+                'password': 'admin123',
                 'index_url': 'http://localhost:8081/repository/pypi-private/simple',
                 'repository_url': 'http://localhost:8081/repository/pypi-private/',
             },
@@ -120,20 +121,6 @@ class TestCheck(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'test_package1-1.0.1.tar.gz')))
 
     def test_search_nexus3_pyversion(self):
-        versions = self.get_versions(
-            name='test_package1',
-            python_version='2',
-            packaging='any',
-        )
-        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])
-
-        versions = self.get_versions(
-            name='test_package1',
-            python_version='2',
-            packaging='binary',
-        )
-        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1')])
-
         versions = self.get_versions(
             name='test_package1',
             python_version='3',
