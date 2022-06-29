@@ -21,7 +21,6 @@ import subprocess
 import sys
 
 from . import common, pipio
-from pep440 import is_canonical
 
 class VersionValidationError(Exception):
     pass
@@ -81,7 +80,10 @@ def out(srcdir, input):
         raise NamesValidationError(
             f"Different names for package ({package_name}) and input ({input_name}). If this is intentional, you can configure `name_must_match` to `false`."
         )
-    if not is_canonical(version):
+
+    try:
+        pipio.Version(str(version))
+    except pipio.InvalidVersion:
         raise VersionValidationError(
             f"Version {version} string is not compliant with PEP 440 versioning convention"
         )
