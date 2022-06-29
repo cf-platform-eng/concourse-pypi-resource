@@ -139,8 +139,15 @@ docker run --rm -i --volume $(pwd)/output:/destdir cfplatformeng/concourse-pypi-
   ```sh
   docker run -d -p 8081:8081 --name nexus sonatype/nexus3
   ```
+* Fecth the default admin password
+  ```sh
+  docker exec -it nexus cat /nexus-data/admin.password
+  ```
+* Use this password to login in for the first time as `admin` user
+* During initial `Setup wizard`:
+  - Change the password to `admin123`, as configured in `test/nexus-integration.py`.
+  - Disable user anonymous access.
 * Create pypi hosted repositories called `pypi-private` and `pypi-release` (enable redeploy).
-* Disable user anonymous access.
 
 ```sh
 # ensure test-packages are built
