@@ -82,10 +82,11 @@ def out(srcdir, input):
         )
 
     try:
-        pipio.Version(str(version))
+        pipio.Version(version)
     except pipio.InvalidVersion:
         raise VersionValidationError(
-            f"Version {version} string is not compliant with PEP 440 versioning convention"
+            f"Version {version} string is not compliant with PEP 440 versioning convention.",
+            "See https://peps.python.org/pep-0440 for more details."
         )
 
     common.msg('Uploading {} version {}', pkgpath, version)
