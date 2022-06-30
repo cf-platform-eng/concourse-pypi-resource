@@ -16,6 +16,7 @@
 
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -134,6 +135,63 @@ class TestCheck(unittest.TestCase):
         )
         self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])        
 
+class TestPut(unittest.TestCase):
+
+    def test_upload_package_for_pep440_compliant_version(self):
+        pkg_name = 'test_package2' # must differ from package names used in TestCheck
+        src_repo = os.path.join(THISDIR, 'generalized_package')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dst_repo = os.path.join(tmpdir, 'generalized_package')
+            shutil.copytree(src_repo, dst_repo)
+            rc = subprocess.run(['python', 'setup.py', 'sdist'],
+                check=True, cwd=dst_repo,
+                env={
+                    **os.environ,
+                    'TEST_PACKAGE_NAME': pkg_name,
+                    'TEST_PACKAGE_VERSION': '1.2.3.dev10+g123abc45',
+                }
+            )
+            print("sdist returned", rc)
+            out.out(
+                os.path.join(dst_repo, "dist"),
+                {
+                    'source': {
+                        'name': pkg_name,
+                        'repository': make_input(None)['source']['repository'],
+                    },
+                    'params': {'glob': '*.tar.gz'}
+                }
+            )
+
+    def test_fail_to_upload_if_package_version_not_pep440_compliant(self):
+        src_repo = os.path.join(THISDIR, 'generalized_package')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dst_repo = os.path.join(tmpdir, 'generalized_package')
+            shutil.copytree(src_repo, dst_repo)
+            rc = subprocess.run(['python', 'setup.py', 'sdist'],
+                check=True, cwd=dst_repo,
+                env={
+                    **os.environ,
+                    'TEST_PACKAGE_NAME': 'test_package1',
+                    'TEST_PACKAGE_VERSION': '0.0.0-343-gea3bdad',
+                }
+            )
+            print("sdist returned", rc)
+            with self.assertRaises(out.VersionValidationError):
+                out.out(
+                    os.path.join(dst_repo, "dist"),
+                    {
+                        'source': {
+                            'name': 'test_package1',
+                            'test': True,
+                            'repository': {
+                                'username': 'dummy',
+                                'password': 'dummy'
+                            }
+                        },
+                        'params': {'glob': '*.tar.gz'}
+                    }
+                )
 
 if __name__ == '__main__':
     unittest.main()
