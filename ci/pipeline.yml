@@ -56,15 +56,10 @@ resources:
   type: semver
   source:
     driver: git
-    uri: git@github.com:cf-platform-eng/test-python-package
-    branch: main
-    file: version
+    uri: git@github.com:cf-platform-eng/concourse-pypi-resource
+    branch: test-package-version
+    file: test-package-version
     private_key: {{github-private-key}}
-
-- name: package-repo
-  type: git
-  source:
-    uri: http://github.com/cf-platform-eng/test-python-package
 
 - name: acceptance-test-resource
   type: pypi-acceptance
@@ -151,6 +146,8 @@ jobs:
 - name: acceptance-test
   serial: true
   plan:
+  - get: code
+    passed: [package]
   - get: version
     passed: [package]
   - get: docker-acceptance
@@ -159,7 +156,6 @@ jobs:
   - put: test-package-version
     params:
       bump: patch
-  - get: package-repo
   - task: build-package
     config:
       image_resource:
@@ -169,7 +165,8 @@ jobs:
           tag: '3.8'
       platform: linux
       inputs:
-      - name: package-repo
+      - name: code
+      - name: test-package-version
       outputs:
       - name: package-out
       run:
@@ -177,9 +174,11 @@ jobs:
         args:
         - -exc
         - |
-          cd package-repo
+          export TEST_PACKAGE_VERSION="$(cat test-package-version/version)"
+          export TEST_PACKAGE_NAME="cf_platform_eng"
+          cd code/test/generalized_package
           python setup.py sdist
-          cp dist/*.tar.gz ../package-out/
+          cp dist/*.tar.gz ../../../package-out/
   - put: acceptance-test-resource
     params:
       glob: package-out/*.tar.gz
