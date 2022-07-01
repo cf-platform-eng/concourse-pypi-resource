@@ -102,7 +102,7 @@ jobs:
         - -exc
         - |
           apt -q update
-          apt -yq install pipenv python-pip virtualenv
+          apt -yq install pipenv python3-pip virtualenv
           cd code && pipenv run make test
 
 - name: package
@@ -257,7 +257,7 @@ jobs:
         - -exc
         - |
           apt -q update
-          apt -yq install pipenv python-pip virtualenv
+          apt -yq install pipenv python3-pip virtualenv
           cd code && pipenv run make test
     on_failure:
       put: pull-request
