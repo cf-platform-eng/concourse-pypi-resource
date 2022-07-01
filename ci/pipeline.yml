@@ -102,7 +102,8 @@ jobs:
         - -exc
         - |
           apt -q update
-          apt -yq install pipenv python3-pip virtualenv
+          apt -yq install python3-pip virtualenv
+          pip install --no-input pipenv
           cd code && pipenv run make test
 
 - name: package
@@ -134,9 +135,10 @@ jobs:
         - -exc
         - |
           apt -q update
-          apt -yq install pipenv virtualenv
+          apt -yq install virtualenv
+          pip --no-input install pipenv
           cp version/version code/.version
-          cd code && pipenv run make sdist
+          cd code && pipenv run make wheel
           cp -r Dockerfile dist ../docker-build/
   - put: docker-acceptance
     params:
@@ -257,8 +259,9 @@ jobs:
         - -exc
         - |
           apt -q update
-          apt -yq install pipenv python3-pip virtualenv
-          cd code && pipenv run make test
+          apt -yq install python3-pip virtualenv
+          pip --no-input install pipenv
+          cd code && mkdir -p .venv && pipenv run make test
     on_failure:
       put: pull-request
       params:
