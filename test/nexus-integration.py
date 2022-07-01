@@ -16,6 +16,7 @@
 
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -134,6 +135,64 @@ class TestCheck(unittest.TestCase):
         )
         self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])        
 
+class TestPut(unittest.TestCase):
+    pkg_name = 'put_step_test_package'
+    def test_upload_package_with_local_identifier(self):
+        # Format: <public version identifier>[+<local version label>]
+        # See https://peps.python.org/pep-0440 for more details
+        version = '1.2.3.dev10+g123abc45'
+        src_repo = os.path.join(THISDIR, 'generalized_package')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dst_repo = os.path.join(tmpdir, 'generalized_package')
+            shutil.copytree(src_repo, dst_repo)
+            rc = subprocess.run(['python', 'setup.py', 'sdist'],
+                check=True, cwd=dst_repo,
+                env={
+                    **os.environ,
+                    'TEST_PACKAGE_NAME': self.pkg_name,
+                    'TEST_PACKAGE_VERSION': version,
+                }
+            )
+            print("sdist returned", rc)
+            output = out.out(
+                os.path.join(dst_repo, "dist"),
+                {
+                    'source': {
+                        'name': self.pkg_name,
+                        'repository': make_input(None)['source']['repository'],
+                    },
+                    'params': {'glob': '*.tar.gz'}
+                }
+            )
+            assert output['version']['version'] == version
+
+    def test_fail_to_upload_if_package_version_not_pep440_compliant(self):
+        src_repo = os.path.join(THISDIR, 'generalized_package')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dst_repo = os.path.join(tmpdir, 'generalized_package')
+            shutil.copytree(src_repo, dst_repo)
+            rc = subprocess.run(['python', 'setup.py', 'sdist'],
+                check=True, cwd=dst_repo,
+                env={
+                    **os.environ,
+                    'TEST_PACKAGE_NAME': self.pkg_name,
+                    # Version format does not follow PEP440 guidelines.
+                    # See https://peps.python.org/pep-0440 for more details
+                    'TEST_PACKAGE_VERSION': '0.0.0-343-gea3bdad',
+                }
+            )
+            print("sdist returned", rc)
+            with self.assertRaises(out.VersionValidationError):
+                out.out(
+                    os.path.join(dst_repo, "dist"),
+                    {
+                        'source': {
+                            'name': self.pkg_name,
+                            'repository': make_input(None)['source']['repository']
+                        },
+                        'params': {'glob': '*.tar.gz'}
+                    }
+                )
 
 if __name__ == '__main__':
     unittest.main()
