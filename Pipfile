@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 pkginfo = "*"
 twine = "*"
-pip = "*"
+pip = "==20.2.4"
 pep440 = "*"
 setuptools = "*"
 
@@ -17,5 +17,4 @@ pylint = "*"
 semver = "*"
 
 [requires]
-python_version = "3.8"
-
+python_version = "3.9" # must match the Python version configured in Dockerfile

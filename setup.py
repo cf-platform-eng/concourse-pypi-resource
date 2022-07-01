@@ -17,6 +17,7 @@
 from setuptools import setup
 from distutils.version import LooseVersion
 import os
+import subprocess
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -53,13 +54,8 @@ setup(
         'concourse',
     ],
     packages = ['pypi_resource', 'test'],
-    install_requires = [
-        'pkginfo',
-        'twine',
-        'pep440',
-        'pip',
-    ],
-    setup_requires = [],
+    install_requires = subprocess.check_output(['pipenv', 'requirements'], text=True).splitlines()[1:], # [1:] is here beacuse we want to ignore the first line: `-i https://pypi.org/simple`
+    setup_requires = ['pipenv', 'wheel'],
     tests_require = ['pytest'],
     test_suite = 'test',
     include_package_data = True,

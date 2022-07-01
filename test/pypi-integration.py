@@ -34,6 +34,7 @@ class TestGet(unittest.TestCase):
                 'source': {
                     'name': 'numpy',
                     'test': False,
+                    'python_version': '3.7',
                 },
                 'version': {
                     'version': '1.19.1',
@@ -92,30 +93,24 @@ class TestPut(unittest.TestCase):
                 }
             )
 
-    def test_upload_when_different_names_allowed(self):
-        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=REPODIR)
-        print("sdist returned", rc)
-        with self.assertRaises(out.NamesValidationError) as context:
-            out.out(
-                os.path.join(REPODIR, 'dist'),
-                {
-                    'source': {'test': True, 'name': 'mismatching-name', 'name_must_match': False},
-                    'params': {'glob': '*.tar.gz'}
-                }
-            )
-
     def test_fail_to_upload_if_package_version_not_pep440_compliant(self):
-        rc = subprocess.run(['python', 'setup.py', 'sdist'], check=True, cwd=os.path.join(THISDIR, 'test_package1_4'))
+        rc = subprocess.run(['python', 'setup.py', 'sdist'],
+            check=True, cwd=os.path.join(THISDIR, 'generalized_package'),
+            env={
+                **os.environ,
+                'TEST_PACKAGE_NAME': 'test_package1',
+                'TEST_PACKAGE_VERSION': '0.0.0-343-gea3bdad',
+            }
+        )
         print("sdist returned", rc)
         with self.assertRaises(out.VersionValidationError):
             out.out(
-                os.path.join(THISDIR, 'test_package1_4'),
+                os.path.join(THISDIR, 'generalized_package/dist'),
                 {
-                    'source': {'test': True, 'name': 'test_package1'},
-                    'params': {'glob': 'dist/*.tar.gz'}
+                    'source': {'test': True, 'name': 'test_package1', 'repository': {'username': 'dummy', 'password': 'dummy'}},
+                    'params': {'glob': '*.tar.gz'}
                 }
             )
-
 
 class TestPip(unittest.TestCase):
 
