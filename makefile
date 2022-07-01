@@ -17,6 +17,7 @@ Pipfile.lock: Pipfile
 
 .venv/.installed: Pipfile.lock
 	PIPENV_VENV_IN_PROJECT=1 pipenv --three install --dev
+	mkdir -p .venv
 	touch .venv/.installed
 
 test/test_dist: clean_test
