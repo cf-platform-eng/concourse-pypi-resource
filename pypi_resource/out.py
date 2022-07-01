@@ -56,12 +56,15 @@ def upload_package(pkgpath, input):
         'TWINE_REPOSITORY_URL': url
     })
 
-    subprocess.run(
-        twine_cmd,
-        stdout=sys.stderr.fileno(),
-        check=True,
-        env=env
-    )
+    try:
+        subprocess.run(
+            twine_cmd,
+            stdout=sys.stderr.fileno(),
+            check=True,
+            env=env
+        )
+    except subprocess.CalledProcessError as e:
+        raise SystemExit(e.returncode)
 
 
 def out(srcdir, input):
