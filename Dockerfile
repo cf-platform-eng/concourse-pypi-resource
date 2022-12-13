@@ -1,5 +1,5 @@
 # must match the Python version configured in Pipfile
-FROM python:3.9
+FROM python:3.11
 
 COPY dist/concourse_pypi_resource-*.whl .
 RUN pip install concourse_pypi_resource-*.whl && \

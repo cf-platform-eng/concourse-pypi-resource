@@ -51,9 +51,9 @@ class ListVersionsCommand(PipDownloadCommand):
                 options=options,
                 session=session,
                 target_python = TargetPython(
-                    platform=options.platform,
+                    platforms=options.platforms,
                     py_version_info=options.python_version,
-                    abi=options.abi,
+                    abis=options.abis,
                     implementation=options.implementation,
                 ),
             )
@@ -230,5 +230,6 @@ def pip_download_link(resconfig, url: str, destdir: str):
                     Link(url),
                     destdir,
                     Downloader(session, "pretty"),
+                    verbosity=0,
                 )
                 shutil.copy(file.path, destdir)
