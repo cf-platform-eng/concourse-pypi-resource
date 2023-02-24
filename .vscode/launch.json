@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/.vscode/check.py",
-            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [
                 "test/input/check-public.json"
             ]
@@ -19,7 +19,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/in_.py",
-            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [
                 "tmp",
                 "test/input/in-public.json"
@@ -30,7 +30,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test/unittests.py",
-            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"
             }
@@ -40,7 +40,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test/nexus-integration.py",
-            "pythonPath": "${workspaceFolder}/.venv/bin/python",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"
             }
@@ -56,7 +56,7 @@
             "name": "Python: All debug Options",
             "type": "python",
             "request": "launch",
-            "pythonPath": "${config:python.pythonPath}",
+            "python": "${command:python.interpreterPath}",
             "program": "${file}",
             "module": "module.name",
             "env": {
