@@ -13,10 +13,10 @@ clean_test:
 	rm -rf test/test_dist/
 
 Pipfile.lock: Pipfile
-	PIPENV_VENV_IN_PROJECT=1 pipenv --three lock
+	PIPENV_VENV_IN_PROJECT=1 pipenv lock
 
 .venv/.installed: Pipfile.lock
-	PIPENV_VENV_IN_PROJECT=1 pipenv --three install --dev
+	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 	mkdir -p .venv
 	touch .venv/.installed
 
