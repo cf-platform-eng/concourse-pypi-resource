@@ -1,0 +1,6 @@
+project: concourse-pypi-resource-pipeline
+docker_tag_add_file:
+github_tag_add_file:
+pci-gchat_hook: ((gchat_hook_sandobox_integration_team))
+trigger: false
+team: developers
