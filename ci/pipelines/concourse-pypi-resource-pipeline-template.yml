@@ -1,4 +1,22 @@
 ---
+base-job: &base-job
+  on_success:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: success }
+  on_abort:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: error }
+  on_failure:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: failure }
+  on_error:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: error }
+
 docker-registry-config: &docker-registry-config
   username: ((docker_cloud_pix4d_user))
   password: ((docker_cloud_pix4d_password))
@@ -25,13 +43,13 @@ resource_types:
     tag: rc-((docker_tag))
 
 resources:
-- name: gchat-notify
+- name: cogito
   type: cogito
-  icon: chat-alert
   check_every: never
   source:
-    sinks:
-      - gchat
+    repo: concourse-pypi-resource
+    owner: pix4d
+    access_token: ((github_repo_status_token))
     gchat_webhook: ((pci-gchat_hook))
 
 - name: linux-builder.git
@@ -103,18 +121,7 @@ resources:
 jobs:
 
 - name: concourse-pypi-resource-unit-tests
-  on_failure:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: failure
-      chat_message: "concourse pypi resource: unit tests failed"
-  on_error:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: error
-      chat_message: "concourse pypi resource: unit tests errored"
+  <<: *base-job
   plan:
   - get: pypi.git
     trigger: true
@@ -124,18 +131,7 @@ jobs:
     file: pypi.git/ci/tasks/unit-test.yml
 
 - name: concourse-pypi-resource-build
-  on_failure:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: failure
-      chat_message: "concourse pypi resource: build failed"
-  on_error:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: error
-      chat_message: "concourse pypi resource: build errored"
+  <<: *base-job
   plan:
   - get: pypi.git
     trigger: true
@@ -162,18 +158,7 @@ jobs:
       
 
 - name: pypi-acceptance-test
-  on_failure:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: failure
-      chat_message: "pypi-acceptance-test failed"
-  on_error:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: error
-      chat_message: "pypi-acceptance-test errored"
+  <<: *base-job
   plan:
   - get: pypi.dev-docker
     trigger: true
@@ -197,24 +182,6 @@ jobs:
       glob: 'dist/*'
 
 - name: publish-concourse-pypi-resource
-  on_success:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: success
-      chat_message: "concourse pypi resource: 💚 publish new Docker image."
-  on_failure:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: failure
-      chat_message: "concourse pypi resource: publish failed"
-  on_error:
-    put: gchat-notify
-    inputs: []
-    params:
-      state: error
-      chat_message: "concourse pypi resource: publish errored"
   plan:
   - get: pypi.dev-docker
     trigger: ((trigger))
