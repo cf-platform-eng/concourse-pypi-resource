@@ -1,13 +1,6 @@
 project: concourse-pypi-resource-pipeline-template
 docker_tag: latest
 docker_tag_add_file: version/date.txt
-github_tag_add_file: version/name.txt
 branch: master
 trigger: true
 pci-gchat_hook: ((gchat_hook_integration_team))
-
-dependency-updater:
-- name: concourse
-  ignore:
-  - python
-
