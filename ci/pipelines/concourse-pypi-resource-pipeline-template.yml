@@ -192,9 +192,9 @@ jobs:
     params: {file: version/version}
   - put: pix4d-pypi
     inputs:
-      - build
+      - dist
     params:
-      glob: 'build/*'
+      glob: 'dist/*'
 
 - name: publish-concourse-pypi-resource
   on_success:

@@ -5,7 +5,7 @@ inputs:
   - name: version
 
 outputs:
-  - name: build
+  - name: dist
 
 run:
   path: sh
@@ -15,4 +15,4 @@ run:
     export VERSION=`cat version/version`
     cd pypi-wheel-example/example/pypi
     python setup.py bdist_wheel
-    mv dist/*.whl ../../../build/  
+    mv dist/*.whl ../../../dist/  
