@@ -161,6 +161,7 @@ jobs:
     inputs: [image, version]
     params:
       image: image/image.tar
+      additional_tags: ((docker_tag_add_file))
       
 
 - name: pypi-acceptance-test
@@ -193,12 +194,19 @@ jobs:
 - name: publish-concourse-pypi-resource
   <<: *base-job
   plan:
+  - get: linux-builder.git
+  - get: pypi.git
   - get: pypi.dev-docker
     trigger: ((trigger))
     passed: [pypi-acceptance-test]
     params:
       format: oci
+  - task: config-create
+    file: linux-builder.git/ci/tasks/config-create.yml
+    params:
+      REPOSITORY: docker.ci.pix4d.com/concourse-pypi-resource
   - put: pypi.docker
+    inputs: [pypi.dev-docker, version]
     params:
       image: pypi.dev-docker/image.tar
       additional_tags: ((docker_tag_add_file))
