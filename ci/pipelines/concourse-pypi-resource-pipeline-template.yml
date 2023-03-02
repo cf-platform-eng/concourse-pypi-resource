@@ -161,8 +161,6 @@ jobs:
     inputs: [image, version]
     params:
       image: image/image.tar
-      additional_tags: ((docker_tag_add_file))
-      
 
 - name: pypi-acceptance-test
   <<: *base-job
