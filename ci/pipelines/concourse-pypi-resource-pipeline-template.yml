@@ -7,7 +7,7 @@ base-job: &base-job
   on_abort:
     put: cogito
     inputs: [pypi.git]
-    params: { state: error }
+    params: { state: abort }
   on_failure:
     put: cogito
     inputs: [pypi.git]
@@ -126,6 +126,9 @@ jobs:
   - get: pypi.git
     trigger: true
   - get: python.docker
+  - put: cogito
+    inputs: [pypi.git]
+    params: {state: pending}
   - task: run-unit-tests
     image: python.docker
     file: pypi.git/ci/tasks/unit-test.yml
@@ -138,6 +141,9 @@ jobs:
     passed: [concourse-pypi-resource-unit-tests]
   - get: linux-builder.git
   - get: python.docker
+  - put: cogito
+    inputs: [pypi.git]
+    params: {state: pending}
   - task: config-create
     file: linux-builder.git/ci/tasks/config-create.yml
     params:
@@ -170,6 +176,9 @@ jobs:
   - get: version
     params:
       bump: "minor"
+  - put: cogito
+    inputs: [pypi.git]
+    params: {state: pending}
   - task: build-example-wheel
     image: python.docker
     file: pypi.git/ci/tasks/build-example-wheel.yml 
