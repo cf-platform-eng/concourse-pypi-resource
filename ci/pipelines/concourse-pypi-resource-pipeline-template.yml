@@ -191,6 +191,7 @@ jobs:
       glob: 'dist/*'
 
 - name: publish-concourse-pypi-resource
+  <<: *base-job
   plan:
   - get: pypi.dev-docker
     trigger: ((trigger))
