@@ -114,8 +114,8 @@ resources:
   type: semver
   source:
     driver: s3
-    initial_version: 0.0.1
-    key: artifacts/concourse-example-pypi/version
+    initial_version: ((semver_initial_version))
+    key: ((semver_key))
     <<: *s3-params
 
 jobs:
@@ -141,13 +141,10 @@ jobs:
     passed: [concourse-pypi-resource-unit-tests]
   - get: linux-builder.git
   - get: python.docker
+  - get: version
   - put: cogito
     inputs: [pypi.git]
     params: {state: pending}
-  - task: config-create
-    file: linux-builder.git/ci/tasks/config-create.yml
-    params:
-      REPOSITORY: docker.ci.pix4d.com/concourse-pypi-resource
   - task: build-wheel
     image: python.docker
     file: pypi.git/ci/tasks/build-wheel.yml
@@ -194,6 +191,9 @@ jobs:
   plan:
   - get: linux-builder.git
   - get: pypi.git
+  - get: version
+    params:
+      bump: patch
   - get: pypi.dev-docker
     trigger: ((trigger))
     passed: [pypi-acceptance-test]
@@ -203,6 +203,7 @@ jobs:
     file: linux-builder.git/ci/tasks/config-create.yml
     params:
       REPOSITORY: docker.ci.pix4d.com/concourse-pypi-resource
+  - put: version
   - put: pypi.docker
     inputs: [pypi.dev-docker, version]
     params:
