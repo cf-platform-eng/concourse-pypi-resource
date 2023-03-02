@@ -170,16 +170,12 @@ jobs:
   - get: pypi-wheel-example
     trigger: false
   - get: version
-    params:
-      bump: "minor"
   - put: cogito
     inputs: [pypi.git]
     params: {state: pending}
   - task: build-example-wheel
     image: python.docker
-    file: pypi.git/ci/tasks/build-example-wheel.yml 
-  - put: version
-    params: {file: version/version}
+    file: pypi.git/ci/tasks/build-example-wheel.yml
   - put: pix4d-pypi
     inputs:
       - dist
@@ -189,7 +185,6 @@ jobs:
 - name: publish-concourse-pypi-resource
   <<: *base-job
   plan:
-  - get: linux-builder.git
   - get: pypi.git
   - get: version
     params:
@@ -199,11 +194,8 @@ jobs:
     passed: [pypi-acceptance-test]
     params:
       format: oci
-  - task: config-create
-    file: linux-builder.git/ci/tasks/config-create.yml
-    params:
-      REPOSITORY: docker.ci.pix4d.com/concourse-pypi-resource
   - put: version
+    params: {file: version/version}
   - put: pypi.docker
     inputs: [pypi.dev-docker, version]
     params:
