@@ -155,7 +155,7 @@ jobs:
       CONTEXT: repo/
     input_mapping: {repo: wheel}
   - put: pypi.dev-docker
-    inputs: [image, version]
+    inputs: [image]
     params:
       image: image/image.tar
 
