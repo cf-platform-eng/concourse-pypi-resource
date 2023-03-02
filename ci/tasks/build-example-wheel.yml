@@ -1,0 +1,18 @@
+platform: linux
+
+inputs:
+  - name: pypi-wheel-example
+  - name: version
+
+outputs:
+  - name: dist
+
+run:
+  path: sh
+  args:
+  - -exc
+  - |
+    export VERSION=`cat version/version`
+    cd pypi-wheel-example/example/pypi
+    python setup.py bdist_wheel
+    mv dist/*.whl ../../../dist/  

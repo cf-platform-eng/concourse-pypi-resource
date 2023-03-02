@@ -1,0 +1,15 @@
+platform: linux
+
+inputs:
+  - name: pypi.git
+
+run:
+  path: sh
+  args:
+  - -exc
+  - |
+    apt-get -q update
+    apt-get -yq install python3-pip virtualenv
+    pip install --upgrade pip
+    pip install --no-input pipenv
+    cd pypi.git && pipenv run make test

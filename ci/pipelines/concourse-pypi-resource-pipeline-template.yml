@@ -1,0 +1,203 @@
+---
+base-job: &base-job
+  on_success:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: success }
+  on_abort:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: abort }
+  on_failure:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: failure }
+  on_error:
+    put: cogito
+    inputs: [pypi.git]
+    params: { state: error }
+
+docker-registry-config: &docker-registry-config
+  username: ((docker_cloud_pix4d_user))
+  password: ((docker_cloud_pix4d_password))
+
+s3-params: &s3-params
+  bucket: ci-pix4d-concourse-pipeline
+  region_name: eu-west-1
+  access_key_id: ((concourse_user_access_key))
+  secret_access_key: ((concourse_user_secret_key))
+
+resource_types:
+- name: cogito
+  type: registry-image
+  check_every: 24h
+  source:
+    repository: pix4d/cogito
+    tag: master
+
+- name: pypi.test
+  type: registry-image
+  source:
+    <<: *docker-registry-config
+    repository: docker.ci.pix4d.com/concourse-pypi-resource
+    tag: rc-((docker_tag))
+
+resources:
+- name: cogito
+  type: cogito
+  check_every: never
+  source:
+    repo: concourse-pypi-resource
+    owner: pix4d
+    access_token: ((github_repo_status_token))
+    gchat_webhook: ((pci-gchat_hook))
+
+- name: linux-builder.git
+  icon: git
+  type: git
+  source:
+    uri: git@github.com:Pix4D/linux-image-build.git
+    private_key: ((github_ssh_key))
+    branch: master
+    paths:
+      - ci/tasks/*
+
+- name: pix4d-pypi
+  type: pypi.test
+  source:
+    name: concourse.example
+    packaging: any
+    pre_release: true
+    repository:
+      authenticate: in
+      username: concourse
+      password: ((concourse_artifactory_password))
+      index_url: https://artifactory.ci.pix4d.com/artifactory/api/pypi/pix4d-pypi-dev-local/simple
+      repository_url: https://artifactory.ci.pix4d.com/artifactory/api/pypi/pix4d-pypi-dev-local
+
+- name: pypi-wheel-example
+  type: git
+  source:
+    uri: git@github.com:pix4d/concourse-examples.git
+    branch: master
+    private_key: ((github_ssh_key))
+
+- name: pypi.git
+  icon: git
+  type: git
+  source:
+    uri: git@github.com:Pix4D/concourse-pypi-resource.git
+    private_key: ((github_ssh_key))
+    branch: ((branch))
+
+- name: pypi.docker
+  type: registry-image
+  source:
+    <<: *docker-registry-config
+    repository: docker.ci.pix4d.com/concourse-pypi-resource
+    tag: ((docker_tag))
+
+- name: pypi.dev-docker
+  type: registry-image
+  source:
+    <<: *docker-registry-config
+    repository: docker.ci.pix4d.com/concourse-pypi-resource
+    tag: rc-((docker_tag))
+
+- name: python.docker
+  type: registry-image
+  source:
+    repository: python
+    tag: '3.11'
+
+- name: version
+  type: semver
+  source:
+    driver: s3
+    initial_version: 0.0.1
+    key: artifacts/concourse-example-pypi/version
+    <<: *s3-params
+
+jobs:
+
+- name: concourse-pypi-resource-unit-tests
+  <<: *base-job
+  plan:
+  - get: pypi.git
+    trigger: true
+  - get: python.docker
+  - put: cogito
+    inputs: [pypi.git]
+    params: {state: pending}
+  - task: run-unit-tests
+    image: python.docker
+    file: pypi.git/ci/tasks/unit-test.yml
+
+- name: concourse-pypi-resource-build
+  <<: *base-job
+  plan:
+  - get: pypi.git
+    trigger: true
+    passed: [concourse-pypi-resource-unit-tests]
+  - get: linux-builder.git
+  - get: python.docker
+  - put: cogito
+    inputs: [pypi.git]
+    params: {state: pending}
+  - task: config-create
+    file: linux-builder.git/ci/tasks/config-create.yml
+    params:
+      REPOSITORY: docker.ci.pix4d.com/concourse-pypi-resource
+  - task: build-wheel
+    image: python.docker
+    file: pypi.git/ci/tasks/build-wheel.yml
+  - task: build-image
+    privileged: True
+    file: linux-builder.git/ci/tasks/build-image.yml
+    params:
+      CONTEXT: repo/
+    input_mapping: {repo: wheel}
+  - put: pypi.dev-docker
+    inputs: [image, version]
+    params:
+      image: image/image.tar
+      
+
+- name: pypi-acceptance-test
+  <<: *base-job
+  plan:
+  - get: pypi.dev-docker
+    trigger: true
+    passed: [concourse-pypi-resource-build]
+  - get: pypi.git
+  - get: python.docker
+  - get: pypi-wheel-example
+    trigger: false
+  - get: version
+    params:
+      bump: "minor"
+  - put: cogito
+    inputs: [pypi.git]
+    params: {state: pending}
+  - task: build-example-wheel
+    image: python.docker
+    file: pypi.git/ci/tasks/build-example-wheel.yml 
+  - put: version
+    params: {file: version/version}
+  - put: pix4d-pypi
+    inputs:
+      - dist
+    params:
+      glob: 'dist/*'
+
+- name: publish-concourse-pypi-resource
+  plan:
+  - get: pypi.dev-docker
+    trigger: ((trigger))
+    passed: [pypi-acceptance-test]
+    params:
+      format: oci
+  - put: pypi.docker
+    params:
+      image: pypi.dev-docker/image.tar
+      additional_tags: ((docker_tag_add_file))
