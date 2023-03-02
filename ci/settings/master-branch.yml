@@ -1,4 +1,4 @@
-project: concourse-pypi-resource-pipeline-template
+project: concourse-pypi-resource-pipeline
 docker_tag: latest
 docker_tag_add_file: version/date.txt
 branch: master
