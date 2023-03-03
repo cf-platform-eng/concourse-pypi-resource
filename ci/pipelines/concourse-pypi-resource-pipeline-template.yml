@@ -65,7 +65,7 @@ resources:
 - name: pix4d-pypi
   type: pypi.test
   source:
-    name: concourse.example
+    name: test-package1
     packaging: any
     pre_release: true
     repository:
@@ -74,13 +74,6 @@ resources:
       password: ((concourse_artifactory_password))
       index_url: https://artifactory.ci.pix4d.com/artifactory/api/pypi/pix4d-pypi-dev-local/simple
       repository_url: https://artifactory.ci.pix4d.com/artifactory/api/pypi/pix4d-pypi-dev-local
-
-- name: pypi-wheel-example
-  type: git
-  source:
-    uri: git@github.com:pix4d/concourse-examples.git
-    branch: master
-    private_key: ((github_ssh_key))
 
 - name: pypi.git
   icon: git
@@ -167,8 +160,6 @@ jobs:
     passed: [concourse-pypi-resource-build]
   - get: pypi.git
   - get: python.docker
-  - get: pypi-wheel-example
-    trigger: false
   - get: version
   - put: cogito
     inputs: [pypi.git]
