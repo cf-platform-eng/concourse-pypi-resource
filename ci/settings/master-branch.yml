@@ -2,7 +2,7 @@ project: concourse-pypi-resource-pipeline
 docker_tag: latest
 docker_tag_add_file: version/version
 semver_initial_version: 0.9.0
-semver_key: artifacts/concourse-example-pypi/version
+semver_key: final/concourse-pypi-resource/version
 branch: master
 trigger: true
 pci-gchat_hook: ((gchat_hook_integration_team))
