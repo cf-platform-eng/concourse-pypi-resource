@@ -65,7 +65,7 @@ resources:
 - name: pix4d-pypi
   type: pypi.test
   source:
-    name: concourse.example
+    name: test-package1
     packaging: any
     pre_release: true
     repository:
@@ -74,13 +74,6 @@ resources:
       password: ((concourse_artifactory_password))
       index_url: https://artifactory.ci.pix4d.com/artifactory/api/pypi/pix4d-pypi-dev-local/simple
       repository_url: https://artifactory.ci.pix4d.com/artifactory/api/pypi/pix4d-pypi-dev-local
-
-- name: pypi-wheel-example
-  type: git
-  source:
-    uri: git@github.com:pix4d/concourse-examples.git
-    branch: master
-    private_key: ((github_ssh_key))
 
 - name: pypi.git
   icon: git
@@ -114,8 +107,8 @@ resources:
   type: semver
   source:
     driver: s3
-    initial_version: 0.0.1
-    key: artifacts/concourse-example-pypi/version
+    initial_version: ((semver_initial_version))
+    key: ((semver_key))
     <<: *s3-params
 
 jobs:
@@ -141,13 +134,10 @@ jobs:
     passed: [concourse-pypi-resource-unit-tests]
   - get: linux-builder.git
   - get: python.docker
+  - get: version
   - put: cogito
     inputs: [pypi.git]
     params: {state: pending}
-  - task: config-create
-    file: linux-builder.git/ci/tasks/config-create.yml
-    params:
-      REPOSITORY: docker.ci.pix4d.com/concourse-pypi-resource
   - task: build-wheel
     image: python.docker
     file: pypi.git/ci/tasks/build-wheel.yml
@@ -158,10 +148,9 @@ jobs:
       CONTEXT: repo/
     input_mapping: {repo: wheel}
   - put: pypi.dev-docker
-    inputs: [image, version]
+    inputs: [image]
     params:
       image: image/image.tar
-      
 
 - name: pypi-acceptance-test
   <<: *base-job
@@ -171,19 +160,13 @@ jobs:
     passed: [concourse-pypi-resource-build]
   - get: pypi.git
   - get: python.docker
-  - get: pypi-wheel-example
-    trigger: false
   - get: version
-    params:
-      bump: "minor"
   - put: cogito
     inputs: [pypi.git]
     params: {state: pending}
   - task: build-example-wheel
     image: python.docker
-    file: pypi.git/ci/tasks/build-example-wheel.yml 
-  - put: version
-    params: {file: version/version}
+    file: pypi.git/ci/tasks/build-example-wheel.yml
   - put: pix4d-pypi
     inputs:
       - dist
@@ -191,13 +174,21 @@ jobs:
       glob: 'dist/*'
 
 - name: publish-concourse-pypi-resource
+  <<: *base-job
   plan:
+  - get: pypi.git
+  - get: version
+    params:
+      bump: patch
   - get: pypi.dev-docker
     trigger: ((trigger))
     passed: [pypi-acceptance-test]
     params:
       format: oci
+  - put: version
+    params: {file: version/version}
   - put: pypi.docker
+    inputs: [pypi.dev-docker, version]
     params:
       image: pypi.dev-docker/image.tar
       additional_tags: ((docker_tag_add_file))
