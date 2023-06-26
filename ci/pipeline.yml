@@ -16,7 +16,8 @@ resource_types:
 - name: pull-request
   type: docker-image
   source:
-    repository: teliaoss/github-pr-resource
+    repository: loggregatorbot/github-pr-resource
+    required_review_approvals: 1
 
 resources:
 
